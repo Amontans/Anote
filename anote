@@ -9,12 +9,15 @@ set -e
 PROJ=~/Projects/Anote
 SKILL=$PROJ/scripts
 
-# 数据目录读配置
-if [ -f "$HOME/.config/anote/config" ]; then
+# 数据目录：优先 ANOTE_DATA 环境变量（测试/临时），再读配置
+if [ -n "$ANOTE_DATA" ]; then
+  DATA=$ANOTE_DATA
+elif [ -f "$HOME/.config/anote/config" ]; then
   DATA=$(grep -E '^data_dir=' "$HOME/.config/anote/config" | head -1 | cut -d= -f2- | sed 's|^~|'"$HOME"'|')
 fi
 DATA=${DATA:-~/Documents/Anote}
 PYV="$DATA/.venv/bin/python"
+[ -x "$PYV" ] || PYV=python3   # venv 缺失时回退（语义检索等需 venv 的命令会提示）
 EDITOR_CFG=$(grep -E '^editor=' "$HOME/.config/anote/config" 2>/dev/null | cut -d= -f2-)
 
 usage() {
@@ -24,7 +27,8 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
 使用:
   anote tui                     打开 TUI 界面（推荐入口）
   anote edit <路径>             用配置的编辑器打开笔记（如 anote edit 数学/代数/xxx.tex）
-  anote new <学科/分支> <标题>  新建笔记（自动 META 模板）
+  anote new <学科/分支> <标题>  新建笔记 [--template note|note-math]
+  anote daily                   今日笔记（含队列快照）
   anote search "<关键词>"       检索文献并入队（arXiv/OpenAlex/S2/Crossref）
   anote ask "<问题>"            知识库问答（grep）
   anote ask --semantic "<问题>" 知识库语义问答
@@ -64,26 +68,17 @@ case "$cmd" in
       "$PYV" "$SKILL/anote_config.py"
     fi ;;
   new)
-    dir="$1"; title="$2"
-    [ -z "$dir" ] || [ -z "$title" ] && { echo "用法: anote new <学科/分支> <标题>"; exit 1; }
+    # anote new <学科/分支> <标题> [--template 名]
+    dir="$1"; title="$2"; tpl="note"; shift 2 2>/dev/null || true
+    if [ "$1" = "--template" ] && [ -n "$2" ]; then tpl="$2"; fi
+    [ -z "$dir" ] || [ -z "$title" ] && { echo "用法: anote new <学科/分支> <标题> [--template 名]"; exit 1; }
+    TF="$PROJ/templates/$tpl.tex"
+    [ -f "$TF" ] || TF="$PROJ/templates/note.tex"
     path="$DATA/src/$dir"; mkdir -p "$path"
     f="$path/$(date +%F)_$(echo "$title" | tr ' ' '_').tex"
-    cat > "$f" <<XEOF
-% ==META== 学科: ${dir%/*} | 分支: ${dir##*/} | 标签: | 日期: $(date +%F) | 来源: 教材
-\documentclass[11pt]{ctexart}
-\usepackage[margin=2.5cm]{geometry}
-\usepackage{paralist,amsmath,amssymb}
-\title{$title}
-\date{\today}
-\begin{document}
-\maketitle
-\section{主题}
-\begin{compactitem}
-  \item 
-\end{compactitem}
-\end{document}
-XEOF
-    echo "✓ 已创建: $f"
+    sed -e "s|%%DISC%%|${dir%/*}|g" -e "s|%%BRANCH%%|${dir##*/}|g" \
+        -e "s|%%TITLE%%|$title|g" -e "s|%%DATE%%|$(date +%F)|g" "$TF" > "$f"
+    echo "✓ 已创建: $f（模板: $tpl）"
     "${EDITOR_CFG:-code}" "$f" 2>/dev/null || true ;;
   search)
     [ -z "$1" ] && { echo "用法: anote search \"<关键词>\" [--max 10]"; exit 1; }
@@ -103,6 +98,10 @@ XEOF
     python3 "$SKILL/migrate.py" "$@" ;;
   review)
     python3 "$SKILL/review.py" "$@" ;;
+  daily)
+    f=$("$PYV" "$SKILL/daily.py")
+    echo "✓ 今日笔记: $f"
+    "${EDITOR_CFG:-code}" "$f" 2>/dev/null || true ;;
   project)
     name="$1"; goal="$2"
     [ -z "$name" ] && { echo "用法: anote project <名> [目标]"; exit 1; }

@@ -7,7 +7,7 @@ import subprocess
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Footer, Header, Label, Static, Tree
+from textual.widgets import Footer, Header, Input, Label, Static, Tree
 
 from tui.widgets.modals import OutputModal, PromptModal
 
@@ -17,6 +17,8 @@ class NotesScreen(Screen):
         Binding("f2", "new_note", "新建"),
         Binding("f3", "edit", "编辑"),
         Binding("f4", "search", "检索"),
+        Binding("f6", "focus_filter", "过滤"),
+        Binding("f7", "clear_filter", "清除过滤"),
     ]
 
     def __init__(self, **kwargs):
@@ -25,7 +27,8 @@ class NotesScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        yield Label("📝 笔记（F2 新建 · F3 编辑 · F4 语义检索）", classes="screen-title")
+        yield Label("📝 笔记（F2 新建 · F3 编辑 · F4 语义检索 · F6 过滤）", classes="screen-title")
+        yield Input(placeholder="过滤：学科/分支/标签 关键词（F6 聚焦 · F7 清除）", id="filter")
         yield Tree("src", id="tree")
         yield Static("← 选择笔记预览", id="preview")
         yield Footer()
@@ -33,7 +36,7 @@ class NotesScreen(Screen):
     def on_mount(self) -> None:
         self._build_tree()
 
-    def _build_tree(self) -> None:
+    def _build_tree(self, filter_text: str = "") -> None:
         tree = self.query_one("#tree", Tree)
         tree.clear()
         root = tree.root
@@ -41,6 +44,19 @@ class NotesScreen(Screen):
         if not os.path.isdir(base):
             root.add_leaf("（src/ 为空，按 F2 新建第一篇笔记）")
             return
+        ft = filter_text.strip().lower()
+
+        def matched(path):
+            if not ft:
+                return True
+            if ft in os.path.basename(path).lower():
+                return True
+            try:
+                with open(path, encoding="utf-8") as f:
+                    return ft in f.read(400).lower()
+            except Exception:  # noqa: BLE001
+                return False
+
         for disc in sorted(os.listdir(base)):
             dp = os.path.join(base, disc)
             if not os.path.isdir(dp):
@@ -51,11 +67,15 @@ class NotesScreen(Screen):
                 if os.path.isdir(sp):
                     bnode = dnode.add(sub, data={"kind": "dir", "path": sp})
                     for f in sorted(os.listdir(sp)):
-                        if f.endswith((".tex", ".md")) and f != "00-index.tex":
+                        if f.endswith((".tex", ".md")) and f != "00-index.tex" and matched(os.path.join(sp, f)):
                             bnode.add_leaf(f, data={"kind": "note", "path": os.path.join(sp, f)})
-                elif sub.endswith((".tex", ".md")) and sub != "00-index.tex":
+                elif sub.endswith((".tex", ".md")) and sub != "00-index.tex" and matched(sp):
                     dnode.add_leaf(sub, data={"kind": "note", "path": sp})
         tree.root.expand()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if event.input.id == "filter":
+            self._build_tree(event.value)
 
     def on_tree_node_selected(self, event: Tree.NodeSelected) -> None:
         d = event.node.data or {}
@@ -99,6 +119,14 @@ class NotesScreen(Screen):
         editor = self.app.context.editor
         subprocess.Popen([editor, self._selected], start_new_session=True)
         self.notify(f"已用 {editor} 打开")
+
+    def action_focus_filter(self) -> None:
+        self.query_one("#filter", Input).focus()
+
+    def action_clear_filter(self) -> None:
+        inp = self.query_one("#filter", Input)
+        inp.value = ""
+        self._build_tree()
 
     def action_search(self) -> None:
         self.app.push_screen(PromptModal("语义检索", "问题（如：环是什么代数结构）", on_submit=self._search))

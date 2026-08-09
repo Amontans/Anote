@@ -71,6 +71,9 @@ src/papers/<YYYY-MM-DD>_<作者>_<主题>.tex      # 论文精读笔记
 | `extract.py` | `pdf` `--out` | 写 `.txt` | 0 / 1 |
 | `bibclean.py` | `bib` `--dedupe` `--sort` `--out` | 重写 bib 文件 | 0 |
 | `new_paper.py` | `name` `--lang` `--fmt latex\|md` `--author` `--dir` | 生成论文骨架 | 0 |
+| `daily.py` | `--open` | 创建/返回今日笔记路径（含队列快照） | 0 |
+| `migrate.py` | `--to` `--preview` `--force` `--no-config` `--with-env` | 迁移数据目录（含 .git，校验回滚） | 0/1 |
+| `stats.py` | `--json` | 输出各类文件数 | 0 |
 
 ---
 

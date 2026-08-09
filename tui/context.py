@@ -161,3 +161,25 @@ class AnoteContext:
         if with_env:
             args.append("--with-env")
         return self.run_script("migrate.py", *args, timeout=1800)
+
+
+    # ---- 全文检索（rg）----
+    def rg(self, pattern, max_results=50):
+        """rg 全文检索，返回 [(path, lineno, snippet)]。"""
+        cmd = ["rg", "-n", "-i", pattern, self.data_dir,
+               "-g", "*.tex", "-g", "*.md",
+               "-g", "!00-index.tex", "-g", "!README.md", "--max-count", "1"]
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        except FileNotFoundError:
+            return []
+        results = []
+        for line in proc.stdout.splitlines():
+            p, _, rest = line.partition(":")
+            if not rest:
+                continue
+            ln, _, text = rest.partition(":")
+            results.append((p, ln, text[:120].strip()))
+            if len(results) >= max_results:
+                break
+        return results

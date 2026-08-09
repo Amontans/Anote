@@ -32,16 +32,21 @@ else
   echo "  ⚠️ 无 .git 仓库：先 git init 再重跑"
 fi
 
-# 4. 周回顾定时器
-echo "── [4/5] 周回顾定时器 ──"
-if systemctl --user list-timers notes-review >/dev/null 2>&1; then
-  echo "  ✓ notes-review.timer 已启用"
-else
-  echo "  安装: cp .config/systemd/user/notes-review.* ~/.config/systemd/user/ && systemctl --user daemon-reload && systemctl --user enable --now notes-review.timer"
-fi
+# 4. 周回顾定时器（单元文件在项目 config/systemd/）
+echo "── [4/6] 周回顾定时器 ──"
+mkdir -p ~/.config/systemd/user
+cp "$PROJ/config/systemd/notes-review.service" "$PROJ/config/systemd/notes-review.timer" ~/.config/systemd/user/ 2>/dev/null
+systemctl --user daemon-reload 2>/dev/null
+systemctl --user enable --now notes-review.timer >/dev/null 2>&1 && echo "  ✓ notes-review.timer 已启用"
+
+# 5. anote 统一入口
+echo "── [5/6] anote 命令 ──"
+mkdir -p ~/.local/bin
+ln -sf "$PROJ/anote" ~/.local/bin/anote
+echo "  ✓ ~/.local/bin/anote（若 PATH 缺 ~/.local/bin 请自行添加）"
 
 # 5. 索引 + 语义库 + 自检
-echo "── [5/5] 构建索引 ──"
+echo "── [6/6] 构建索引 ──"
 python3 scripts/index-gen.py >/dev/null && echo "  ✓ 分层索引"
 if [ -x "$PYV" ]; then
   HF_ENDPOINT=https://hf-mirror.com "$PYV" scripts/embed.py || echo "  ⚠️ 语义索引失败（可用 notes index-semantic 重试）"

@@ -13,6 +13,7 @@ from tui.screens.memory import MemoryScreen
 from tui.screens.notes import NotesScreen
 from tui.screens.queue import QueueScreen
 from tui.screens.review import ReviewScreen
+from tui.screens.search import SearchScreen
 from tui.screens.settings import SettingsScreen
 
 # 用临时数据目录隔离（不碰真实数据）
@@ -56,11 +57,13 @@ async def main():
             await pilot.press("ctrl+r"); assert isinstance(app.screen, ReviewScreen)
             await pilot.pause(0.2)
             await pilot.press("ctrl+s"); assert isinstance(app.screen, SettingsScreen)
+            await pilot.press("ctrl+f"); assert isinstance(app.screen, SearchScreen)
+            await pilot.press("ctrl+h"); assert isinstance(app.screen, HomeScreen)
             await pilot.press("f1"); assert isinstance(app.screen, HelpScreen)
             await pilot.press("ctrl+h"); assert isinstance(app.screen, HomeScreen)
             await pilot.press("f5")
             await pilot.pause(0.2)
-            print("SMOKE OK: 8 屏导航 + 挂载全部通过")
+            print("SMOKE OK: 9 屏导航 + 挂载全部通过")
     finally:
         os.environ.pop("ANOTE_DATA", None)
         shutil.rmtree(TMP, ignore_errors=True)

@@ -1,5 +1,19 @@
 # 变更日志（CHANGELOG）
 
+## [0.9.0] - 2026-08-09（检索增强）
+
+### 新增
+- **全文搜索页**：TUI `Ctrl+F`（rg 集成，结果列表→F2 打开/F3 预览）；`context.rg()`
+- **META 标签/学科过滤**：笔记页 F6 聚焦过滤框（匹配文件名+META 前 400 字）、F7 清除
+- **模板系统**：`templates/note.tex` + `note-math.tex`（定理环境）；`anote new ... --template note|note-math`
+- **每日笔记**：`anote daily`（src/日志/YYYY-MM-DD.tex，含当日队列快照）
+- **可移植性强化**：setup.sh 装 anote 命令+定时器（单元文件归入项目 config/systemd/）；anote 脚本尊重 ANOTE_DATA env；venv 缺失回退 python3
+- **AI 交接文档**：docs/HANDOFF.md（全部路径/命令/格式/决策/坑/可移植流程——新会话读它即可接手）
+
+### 修复
+- anote 脚本不尊重 ANOTE_DATA（bash 路径逻辑）；误建文件已清理
+
+
 ## [Unreleased] - 0.8.0-dev（TUI 开发中）
 
 ### 新增

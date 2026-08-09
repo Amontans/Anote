@@ -22,6 +22,7 @@ from tui.screens.onboarding import OnboardingScreen
 from tui.screens.notes import NotesScreen
 from tui.screens.queue import QueueScreen
 from tui.screens.review import ReviewScreen
+from tui.screens.search import SearchScreen
 from tui.screens.settings import SettingsScreen
 
 
@@ -55,6 +56,7 @@ class AnoteApp(App):
         Binding("f5", "check", "自检", priority=True),
         Binding("ctrl+d", "quit", "退出", priority=True),
         Binding("ctrl+p", "command_palette", "命令面板", priority=True),
+        Binding("ctrl+f", "go_search", "全文搜索", priority=True),
     ]
     COMMANDS = [AnoteCommands]
     SCREENS = {
@@ -67,6 +69,7 @@ class AnoteApp(App):
         "memory": MemoryScreen,
         "books": BooksScreen,
         "review": ReviewScreen,
+        "search": SearchScreen,
     }
 
     def __init__(self, context=None):
@@ -101,6 +104,9 @@ class AnoteApp(App):
 
     def action_go_settings(self):
         self.switch_screen("settings")
+
+    def action_go_search(self):
+        self.switch_screen("search")
 
     def action_go_help(self):
         self.switch_screen("help")
