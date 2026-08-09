@@ -7,7 +7,7 @@
 ## 快速开始
 
 ```bash
-cd ~/Documents/Anote
+cd ~/Projects/Anote
 ./setup.sh          # 一键自举（依赖检查+venv+索引+自检，幂等）
 alias notes="$PWD/manage.sh"
 
@@ -35,7 +35,7 @@ notes backup                        # 提交+推送远程
 3. 学术概念/写作类 → 结合 `memory/concepts.tex`、`docs/` 与网络检索回答。
 
 ### 用户要学习辅助时
-- **找文献**：`scripts/search.py --provider arxiv|openalex|s2|crossref --query "..." --queue ~/Documents/Anote/queue.tex`
+- **找文献**：`scripts/search.py --provider arxiv|openalex|s2|crossref --query "..." --queue ~/Documents/Anote/queue.md`
 - **读论文**：`scripts/fetch_paper.py --arxivid <ID> --tex-note` → 读提取文本 → 按模板填充 → 更新队列状态（📖→✅）
 - **沉淀知识**：会话结束更新 `memory/research-log.tex`；有影响思考的结论写 `insights.tex`；矛盾/未解写 `open-questions.tex`（格式见 INTERFACES §2）
 - **周回顾**：`notes review --days 7` → 提炼洞见/概念 → 用户确认 → commit
@@ -51,7 +51,7 @@ notes backup                        # 提交+推送远程
 ### 🚪 入口（你只碰这些）
 | 文件 | 作用 | 怎么用 |
 |------|------|--------|
-| `manage.sh` | **唯一命令入口** | `notes <命令>`（建议 `alias notes="~/Documents/Anote/manage.sh"`） |
+| `manage.sh` | **唯一命令入口** | `notes <命令>`（建议 `alias notes="~/Projects/Anote/manage.sh"`） |
 | `setup.sh` | 一键自举/重建系统 | 新机器或损坏后运行一次，幂等 |
 
 ### 📚 文档（先读这些）
@@ -71,7 +71,7 @@ notes backup                        # 提交+推送远程
 | `memory/` | 记忆层：研究日志/洞见/概念/开放问题/回顾 | AI 自动维护，你每周确认 |
 | `books/<书名>/` | 教科书（ctexbook 项目） | `notes book / chapter / book-build` |
 | `projects/<名>/` | 研究项目（plan+log） | `notes project "名" "目标"` |
-| `queue.tex` | 论文待读队列（📥→📖→✅→🗄） | `search.py --queue` 入队，AI 更新状态 |
+| `queue.md` | 论文待读队列（📥→📖→✅→🗄） | `search.py --queue` 入队，AI 更新状态 |
 | `roadmap.tex` | 研究路线图（季度审视） | 月度回顾时更新 |
 | `refs.bib` | 引用库 | Zotero/JabRef 导出，`\cite{}` 引用 |
 | `pdfs/` | PDF 附件（不入 git） | 下载的论文放这 |

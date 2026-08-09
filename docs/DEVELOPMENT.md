@@ -31,7 +31,7 @@
 
 ## 三、接口变更纪律
 
-- 冻结格式（**永不破坏**）：`src/` 笔记+META、`memory/` 结构、`queue.tex` 列结构
+- 冻结格式（**永不破坏**）：`src/` 笔记+META、`memory/` 结构、`queue.md` 列结构
 - 可重建派生物（随便改）：`.semantic/`、`00-index.tex`、`reviews/`
 - 新增参数必带默认值（=旧行为）；删功能先弃用一版；任何变更更新 CHANGELOG
 
@@ -47,7 +47,7 @@
 ## 五、升级步骤（通用）
 
 ```bash
-cd ~/Documents/Anote
+cd ~/Projects/Anote
 git pull                        # 有远程时
 ./setup.sh                      # 自举（依赖/venv/索引/自检）
 notes check                     # 全绿即完成

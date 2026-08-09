@@ -46,7 +46,7 @@ src/papers/<YYYY-MM-DD>_<作者>_<主题>.tex      # 论文精读笔记
 
 ---
 
-## 3. 队列接口（queue.tex）
+## 3. 队列接口（queue.md）
 
 - 表格列：`状态 | 日期 | 论文 | arXiv/DOI | 笔记路径`
 - 状态机：`📥待读 → 📖在读 → ✅已精读 → 🗄已归档`（由 AI/脚本维护）
@@ -109,7 +109,7 @@ notes {index | index-semantic [--full] | check | review [--days N] | ask [--smar
 
 ## 8. 升级接口（向后兼容策略）
 
-- **数据格式冻结层**：`src/`、`memory/`、`queue.tex` 的格式 = v1 契约，**永不破坏性变更**；新增字段必须可选项
+- **数据格式冻结层**：`src/`、`memory/`、`queue.md` 的格式 = v1 契约，**永不破坏性变更**；新增字段必须可选项
 - **派生物可重建**：`.semantic/`、`00-index.tex`、`reviews/` 变更 schema 时自动重建，无需迁移
 - **脚本接口**：新增参数必须带默认值（= 旧行为）；删参数需先弃用一个版本
 - 具体版本历史见 `docs/UPGRADING.md`
