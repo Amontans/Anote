@@ -74,6 +74,7 @@ src/papers/<YYYY-MM-DD>_<作者>_<主题>.tex      # 论文精读笔记
 | `daily.py` | `--open` | 创建/返回今日笔记路径（含队列快照） | 0 |
 | `migrate.py` | `--to` `--preview` `--force` `--no-config` `--with-env` | 迁移数据目录（含 .git，校验回滚） | 0/1 |
 | `stats.py` | `--json` | 输出各类文件数 | 0 |
+| `backlinks.py` | `<概念>` `--json` | 反链视图（rg 计数+META 标签） | 0 |
 
 ---
 

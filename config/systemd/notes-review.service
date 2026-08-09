@@ -1,5 +1,5 @@
 [Unit]
-Description=Anote 科研知识库每周自动回顾草稿
+Description=Anote 科研知识库每周自动回顾（草稿+提交）
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/python3 /home/Amontans/Projects/Anote/scripts/review.py --days 7
+ExecStart=/bin/bash /home/Amontans/Projects/Anote/scripts/weekly-review.sh

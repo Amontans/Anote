@@ -33,6 +33,7 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote ask "<问题>"            知识库问答（grep）
   anote ask --semantic "<问题>" 知识库语义问答
   anote ask-pi "<问题>"        经 Pi 回答（可检索知识库）
+  anote backlinks "<概念>"       反链：谁引用了这个概念
   anote index                   重建分层索引
   anote index-semantic          重建语义索引
   anote check                   一致性自检（6 项）
@@ -92,6 +93,10 @@ case "$cmd" in
     pi -p "$*" ;;
   ask-ai)
     "$PYV" "$SKILL/ask.py" "$@" ;;
+  backlinks)
+    # anote backlinks "<概念>" —— 反链视图
+    [ -z "$1" ] && { echo "用法: anote backlinks \"<概念>\""; exit 1; }
+    python3 "$SKILL/backlinks.py" "$1" ;;
   index)
     python3 "$SKILL/index-gen.py" ;;
   index-semantic)

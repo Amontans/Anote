@@ -1,6 +1,16 @@
 # 变更日志（CHANGELOG）
 
-## [1.1.0-dev] - 2026-08-09（AI 深度集成 · 经 Pi）
+## [1.1.0] - 2026-08-09（AI 深度集成 · 经 Pi + 现代化改造）
+
+### 新增（v1.1 路线图三项）
+- **反链视图**：`anote backlinks "<概念>"`（rg 计数 + META 标签命中）
+- **回顾自动化**：定时器改为 `weekly-review.sh`（生成草稿 + 自动 git 提交）
+- **语义索引自动增量**：pre-commit 钩子自动重嵌入变更文件
+
+### 代码现代化改造（docs/CODING.md）
+- **src-layout 包**：`src/anote/`（core.py：Config dataclass/Result/setup_logging；services.py：QueueService/NotesService/StatsService）
+- **薄适配器**：stats.py / daily.py 重构为调包（消除 bootstrap 重复）
+- **单元测试**：`tests/test_core.py`（8 项，临时目录隔离）
 
 ### 新增
 - **AI 问答面板（经 Pi 代理）**：TUI `Ctrl+A` / Home「🤖 AI 问答」按钮 / `anote ask-pi "<问题>"`
