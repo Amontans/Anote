@@ -12,25 +12,14 @@ from textual.binding import Binding
 
 from tui.commands import AnoteCommands
 from tui.context import AnoteContext, ConfigChanged
+from tui.screens.books import BooksScreen
 from tui.screens.help import HelpScreen
 from tui.screens.home import HomeScreen
-from tui.screens.placeholders import PlaceholderScreen
+from tui.screens.memory import MemoryScreen
+from tui.screens.notes import NotesScreen
+from tui.screens.queue import QueueScreen
+from tui.screens.review import ReviewScreen
 from tui.screens.settings import SettingsScreen
-
-PLACEHOLDERS = {
-    "notes": ("📝 笔记", "浏览学科树、预览、新建、编辑、语义检索笔记。",
-              ["学科树浏览（目录 + META 预览）", "新建笔记（调 notes new）", "编辑（$editor 打开）",
-               "语义检索（调 ask.py --semantic，结果面板）"]),
-    "queue": ("📥 文献队列", "论文生命周期：待读 → 在读 → 已精读 → 归档。",
-              ["队列表格渲染（queue.md）", "状态切换（📥→📖→✅→🗄）",
-               "文献检索入队（调 search.py --queue）", "跳转精读笔记"]),
-    "memory": ("🧠 记忆层", "研究日志 / 洞见 / 概念 / 开放问题 四页签。",
-               ["四文件页签查看/追加", "运行回顾（调 review.py）", "查看回顾草稿"]),
-    "books": ("📚 教科书", "ctexbook 书籍与章节管理。",
-              ["书/章节列表", "新建书/章（调 notes book/chapter）", "编译输出面板（book-build）"]),
-    "review": ("🔄 回顾", "周期性知识编译：散点笔记 → 结构化知识。",
-               ["最近回顾草稿列表", "一键生成回顾（调 review.py）", "提炼结果确认流"]),
-}
 
 
 class AnoteApp(App):
@@ -42,6 +31,14 @@ class AnoteApp(App):
     Button { margin: 0 1 0 0; }
     Label { margin-top: 1; }
     Input, Select { margin-bottom: 1; }
+    .screen-title { text-style: bold; padding: 0 0 1 0; }
+    #tree { height: 1fr; border: round #585b70; }
+    #preview { height: 1fr; border: round #585b70; padding: 1; }
+    #queue { height: 1fr; border: round #585b70; }
+    #md { height: 1fr; border: round #585b70; padding: 1; }
+    #books, #chapters, #drafts { height: 1fr; border: round #585b70; }
+    #modal-box { width: 70; height: auto; border: thick #89b4fa; background: #1e1e2e; padding: 1 2; }
+    #modal-box #output { height: 20; overflow-y: auto; }
     """
     BINDINGS = [
         Binding("f1", "go_help", "帮助", priority=True),
@@ -61,7 +58,11 @@ class AnoteApp(App):
         "home": HomeScreen,
         "settings": SettingsScreen,
         "help": HelpScreen,
-        **{k: (lambda k=k, v=v: PlaceholderScreen(k, *v)) for k, v in PLACEHOLDERS.items()},
+        "notes": NotesScreen,
+        "queue": QueueScreen,
+        "memory": MemoryScreen,
+        "books": BooksScreen,
+        "review": ReviewScreen,
     }
 
     def __init__(self, context=None):

@@ -24,9 +24,9 @@
 
 | 替换 | 做法 | 数据影响 |
 |------|------|:---:|
-| 换嵌入模型 | `embed.py` 改模型名 → `rm -rf .semantic && notes index-semantic --full` | 无 |
+| 换嵌入模型 | `embed.py` 改模型名 → `rm -rf .semantic && anote index-semantic --full` | 无 |
 | 换向量库（ChromaDB 等） | 只改 `embed.py`（写）与 `ask.py::semantic_search`（读），CLI 接口不变 | 无 |
-| 加 Web 外壳 | 新目录，只读 `src/` + `.semantic/`，写经 `notes commit` | 无 |
+| 加 Web 外壳 | 新目录，只读 `src/` + `.semantic/`，写经 `anote commit` | 无 |
 | 加知识编译层（wiki） | 新增 `wiki.py`，读 `src/` 写 `memory/` | 无 |
 
 ## 三、接口变更纪律
@@ -50,6 +50,6 @@
 cd ~/Projects/Anote
 git pull                        # 有远程时
 ./setup.sh                      # 自举（依赖/venv/索引/自检）
-notes check                     # 全绿即完成
+anote check                     # 全绿即完成
 ```
 任何时刻 `src/` 完好 ⇒ 系统可 100% 重建。

@@ -33,7 +33,7 @@
          ▲                                      │
          └── ask.py(关键词/语义) ← .semantic/ ←──┘  （问答即读即答）
 ② 编译:  周回顾(review.py) → 提炼 → memory/{insights,concepts,open-questions}
-③ 成书:  notes book/chapter → books/<名>/ → latexmk 编译 PDF
+③ 成书:  anote book/chapter → books/<名>/ → latexmk 编译 PDF
 └── 全程: pre-commit 自动索引+自检；git 提交；backup 推送
 ```
 
@@ -48,4 +48,4 @@
 | 防遗忘 | check.py 6 项 + pre-commit 提示 | 结构不腐烂 |
 | 省 token | ask.py 片段检索（grep/语义） | 问答不读全文 |
 | 升级安全 | schema_version + 可重建派生物 | 换组件不换数据 |
-| 备份 | git + `notes backup` | 资产永不丢失 |
+| 备份 | git + `anote backup` | 资产永不丢失 |

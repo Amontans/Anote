@@ -1,6 +1,6 @@
 # Anote TUI 规划书（v0.7 设计文档）
 
-> 状态：P0（配置化）+ P1（框架骨架）已实现（v0.8.0-dev）。P2/P3 待开发。目标：为 Anote 增加一个类 Pi Agent 的终端 TUI，让使用者**超快上手、忘记随时可查**，且**维护成本最低**。
+> 状态：P0+P1+P2 已实现（v0.8.0-dev）。P3（迁移向导）待开发。目标：为 Anote 增加一个类 Pi Agent 的终端 TUI，让使用者**超快上手、忘记随时可查**，且**维护成本最低**。
 
 ## 一、设计原则（决定一切的三个铁律）
 
@@ -68,10 +68,10 @@ Home 仪表盘
 | 页面 | 内容 | 关键操作 |
 |------|------|----------|
 | **Home** | 数据目录、笔记数、队列计数(📥📖✅🗄)、语义索引状态、上次回顾、check 健康 | 一键 check；快速动作 |
-| **Notes** | src/ 目录树 + 选中预览(META+正文头) | 新建(调 notes new)、编辑(调 $editor)、检索(调 ask.py，结果面板) |
+| **Notes** | src/ 目录树 + 选中预览(META+正文头) | 新建(调 anote new)、编辑(调 $editor)、检索(调 ask.py，结果面板) |
 | **Queue** | queue.md 表格渲染 | 状态切换、搜索入队(调 search.py --queue)、打开精读笔记 |
 | **Memory** | 四文件页签，MD 渲染 | 追加条目、运行回顾(调 review.py)、查看草稿 |
-| **Books** | 书/章节列表 | 新建书/章(调 notes book/chapter)、编译(调 book-build，输出面板) |
+| **Books** | 书/章节列表 | 新建书/章(调 anote book/chapter)、编译(调 book-build，输出面板) |
 | **Review** | 最近回顾草稿 + 本周活动 | 一键"开始回顾"（生成草稿→提示确认） |
 | **Settings** | 各设置表单 | **数据迁移向导**（见下） |
 | **Help** | 命令手册全文 + 快捷键 | 随时 `?` 呼出 |
@@ -132,7 +132,7 @@ m 记忆  b 书  r 回顾  s 设置  esc 返回  F5 运行 check  Ctrl+D 退出
 - [ ] 配置单文件双解析（bash/python 各 ~10 行）
 - [ ] 帮助内容数据驱动（从 docs/ 生成）
 - [ ] 迁移逻辑独立成 `scripts/migrate.py`（可单独测，TUI 只调它）
-- [ ] 冒烟测试 = `./setup.sh && notes check` 全绿
+- [ ] 冒烟测试 = `./setup.sh && anote check` 全绿
 - [ ] 版本锁：Textual 固定版本号
 
 ## 九、实施路线图（约 1 周单人）
@@ -141,8 +141,8 @@ m 记忆  b 书  r 回顾  s 设置  esc 返回  F5 运行 check  Ctrl+D 退出
 |------|------|------|
 | P0 | 配置化：anote_config.py + manage.sh/scripts 改读 config | ✅ 已完成（实测改 data_dir 后脚本跟随） |
 | P1 | TUI 骨架：Textual 入口 + Home + Help + Settings 框架 | ✅ 已完成（冒烟测试 8 项通过；键位改 Ctrl 组合） |
-| P2 | 数据页：Notes/Queue/Memory/Books/Review | 全部只读浏览可用 |
-| P3 | 操作接线 + 迁移向导 + Onboarding | 读写闭环 + 迁移实测 |
+| P2 | 数据页：Notes/Queue/Memory/Books/Review | ✅ 已完成（含写操作+集成测试） |
+| P3 | 数据迁移向导（含 .git 一起搬 + 校验回滚）+ Onboarding | 待开发 |
 | P4 | 命令面板、空状态、文档同步、测试 | v0.8.0 发布 |
 
 ## 十、待确认决策（实现前需要你拍板）

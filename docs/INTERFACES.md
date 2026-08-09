@@ -82,7 +82,7 @@ src/papers/<YYYY-MM-DD>_<作者>_<主题>.tex      # 论文精读笔记
   "chunks": [ { "path": "绝对路径", "mtime": 1234.56, "text": "切块文本" } ] }
 ```
 - `vectors.npy`：`float32 [N, 512]`，第 i 行对应 chunks[i]（bge-small-zh-v1.5，512 维）
-- **可重建**：删除 `.semantic/` 后 `notes index-semantic` 全量重建，无数据损失
+- **可重建**：删除 `.semantic/` 后 `anote index-semantic` 全量重建，无数据损失
 - **演进规则**：`schema_version` 变更 = 缓存格式不兼容，脚本需做迁移或自动全量重建
 
 ---

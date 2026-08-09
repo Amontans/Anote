@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# ============================================================
+#  anote — Anote 科研知识库统一入口
+#  用法: anote <命令> [参数]
+#  安装: ln -sf "$PWD/anote" ~/.local/bin/anote  （PATH 含 ~/.local/bin）
+#  数据目录可在 ~/.config/anote/config 中更改（anote config set data_dir 路径）
+# ============================================================
+set -e
+PROJ=~/Projects/Anote
+SKILL=$PROJ/scripts
+
+# 数据目录读配置
+if [ -f "$HOME/.config/anote/config" ]; then
+  DATA=$(grep -E '^data_dir=' "$HOME/.config/anote/config" | head -1 | cut -d= -f2- | sed 's|^~|'"$HOME"'|')
+fi
+DATA=${DATA:-~/Documents/Anote}
+PYV="$DATA/.venv/bin/python"
+EDITOR_CFG=$(grep -E '^editor=' "$HOME/.config/anote/config" 2>/dev/null | cut -d= -f2-)
+
+usage() {
+  cat <<'EOF'
+anote — Anote 科研知识库统一入口（v0.8.0-dev）
+
+使用:
+  anote tui                     打开 TUI 界面（推荐入口）
+  anote edit <路径>             用配置的编辑器打开笔记（如 anote edit 数学/代数/xxx.tex）
+  anote new <学科/分支> <标题>  新建笔记（自动 META 模板）
+  anote search "<关键词>"       检索文献并入队（arXiv/OpenAlex/S2/Crossref）
+  anote ask "<问题>"            知识库问答（grep）
+  anote ask --semantic "<问题>" 知识库语义问答
+  anote index                   重建分层索引
+  anote index-semantic          重建语义索引
+  anote check                   一致性自检（6 项）
+  anote review [--days 30]      生成周/月回顾草稿
+  anote project <名> [目标]     新建研究项目
+  anote book <书名> [作者]      新建教科书
+  anote chapter <书名> <章名>   添加章节
+  anote book-build <书名>       编译教科书 PDF
+  anote commit [说明]           提交（自动索引+自检）
+  anote backup                  提交并推送远程
+  anote config                  查看配置
+  anote config set <键> <值>    修改配置（如 data_dir / editor / lang）
+  anote help                    本帮助
+
+数据目录: $DATA   编辑器: ${EDITOR_CFG:-code}
+EOF
+}
+
+cmd="$1"; shift || true
+
+case "$cmd" in
+  ""|help|-h|--help) usage ;;
+  tui) cd "$PROJ" && "$PYV" -m tui ;;
+  edit)
+    [ -z "$1" ] && { echo "用法: anote edit <相对数据目录的路径>"; exit 1; }
+    p="$DATA/$1"; [ -f "$p" ] || { echo "不存在: $p"; exit 1; }
+    "${EDITOR_CFG:-code}" "$p" ;;
+  config)
+    if [ "$1" = "set" ]; then
+      "$PYV" "$SKILL/anote_config.py" set "$2" "$3"
+    else
+      "$PYV" "$SKILL/anote_config.py"
+    fi ;;
+  new)
+    dir="$1"; title="$2"
+    [ -z "$dir" ] || [ -z "$title" ] && { echo "用法: anote new <学科/分支> <标题>"; exit 1; }
+    path="$DATA/src/$dir"; mkdir -p "$path"
+    f="$path/$(date +%F)_$(echo "$title" | tr ' ' '_').tex"
+    cat > "$f" <<XEOF
+% ==META== 学科: ${dir%/*} | 分支: ${dir##*/} | 标签: | 日期: $(date +%F) | 来源: 教材
+\documentclass[11pt]{ctexart}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{paralist,amsmath,amssymb}
+\title{$title}
+\date{\today}
+\begin{document}
+\maketitle
+\section{主题}
+\begin{compactitem}
+  \item 
+\end{compactitem}
+\end{document}
+XEOF
+    echo "✓ 已创建: $f"
+    "${EDITOR_CFG:-code}" "$f" 2>/dev/null || true ;;
+  search)
+    [ -z "$1" ] && { echo "用法: anote search \"<关键词>\" [--max 10]"; exit 1; }
+    "$PYV" "$SKILL/search.py" --provider arxiv --query "$1" --queue "$DATA/queue.md" "${@:2}" ;;
+  ask)
+    "$PYV" "$SKILL/ask.py" "$@" ;;
+  index)
+    python3 "$SKILL/index-gen.py" ;;
+  index-semantic)
+    HF_ENDPOINT=https://hf-mirror.com "$PYV" "$SKILL/embed.py" "$@" ;;
+  check)
+    python3 "$SKILL/check.py" ;;
+  review)
+    python3 "$SKILL/review.py" "$@" ;;
+  project)
+    name="$1"; goal="$2"
+    [ -z "$name" ] && { echo "用法: anote project <名> [目标]"; exit 1; }
+    d="$DATA/projects/$name"; mkdir -p "$d"
+    cp "$DATA/projects/_template/plan.tex" "$d/plan.tex" 2>/dev/null || true
+    cp "$DATA/projects/_template/log.tex" "$d/log.tex" 2>/dev/null || true
+    echo "✓ 项目已创建: $d" ;;
+  book)
+    name="$1"; author="${2:-作者}"
+    [ -z "$name" ] && { echo "用法: anote book <书名> [作者]"; exit 1; }
+    d="$DATA/books/$name"; mkdir -p "$d/chapters" "$d/figures"
+    cp "$DATA/books/_template/main.tex" "$d/main.tex" 2>/dev/null || true
+    cp "$DATA/books/_template/chapters/ch01.tex" "$d/chapters/ch01.tex" 2>/dev/null || true
+    cp "$DATA/books/_template/refs.bib" "$d/refs.bib" 2>/dev/null || true
+    cp "$DATA/books/_template/latexmkrc" "$d/latexmkrc" 2>/dev/null || true
+    sed -i "s/书名（在 manage.sh book 生成时填入）/$name/" "$d/main.tex" 2>/dev/null || true
+    echo "✓ 教科书已创建: $d（anote book-build \"$name\" 编译）" ;;
+  chapter)
+    book="$1"; title="$2"
+    [ -z "$book" ] || [ -z "$title" ] && { echo "用法: anote chapter <书名> <章名>"; exit 1; }
+    d="$DATA/books/$book/chapters"
+    n=$(ls "$d" 2>/dev/null | wc -l); n=$((n+1))
+    f="$d/ch$(printf %02d $n).tex"
+    printf '%%%% ===== 第 %d 章 =====\\n\\\\chapter{%s}\\n\\\\label{ch:auto%d}\\n\\n正文从这里写起。\\n' "$n" "$title" "$n" > "$f"
+    echo "✓ 章节已创建: $f" ;;
+  book-build)
+    name="$1"; [ -z "$name" ] && { echo "用法: anote book-build <书名>"; exit 1; }
+    cd "$DATA/books/$name" && latexmk -lualatex -interaction=nonstopmode main.tex 2>&1 | tail -3 ;;
+  commit)
+    cd "$DATA" && git add -A && git commit -m "${1:-update}" ;;
+  backup)
+    cd "$DATA" && git add -A && git commit -m "backup: $(date '+%Y-%m-%d %H:%M')" || echo "无新变更"
+    if git remote -v | grep -q push; then git push && echo "✅ 已推送远程"
+    else echo "⚠️ 未配置远程: git remote add origin <gitee 地址>"; fi ;;
+  *)
+    echo "未知命令: $cmd"; usage; exit 1 ;;
+esac

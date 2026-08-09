@@ -40,7 +40,10 @@ def get(key, default=None):
 
 
 def data_dir():
-    """返回展开后的数据目录（~ 展开）。"""
+    """返回展开后的数据目录：优先 ANOTE_DATA 环境变量（测试/临时覆盖），再读配置。"""
+    env = os.environ.get("ANOTE_DATA")
+    if env:
+        return os.path.expanduser(env)
     return os.path.expanduser(load().get("data_dir", DEFAULTS["data_dir"]))
 
 

@@ -17,8 +17,17 @@
 - 全局导航键从单字母改为 Ctrl 组合（Textual 8.x：输入框聚焦时吞掉纯字母键，Ctrl 组合可靠）
 - 语义索引：`notes index-semantic` 移入 manage.sh（P0 配置化）
 
-### 待办（P2/P3）
-- 数据页实装（Notes/Queue/Memory/Books/Review）
+### 新增（P2 数据页实装）
+- **Notes 笔记页**：学科树浏览/预览、新建（F2 弹窗）、编辑（$editor）、语义检索（F4 结果面板）
+- **Queue 队列页**：表格渲染、状态切换（空格）、检索入队（F2）、打开笔记（F3）
+- **Memory 记忆页**：四页签（日志/洞见/概念/问题）、追加条目（F2）
+- **Books 书页**：书/章节列表、新建书·章（F2/F3）、编译（F4 输出面板）
+- **Review 回顾页**：草稿列表/预览、一键生成（F2）
+- **统一入口 `anote <命令>`**：tui/edit/new/search/ask/index/check/review/book/commit/backup/config；安装至 ~/.local/bin/anote；manage.sh 降为兼容包装
+- **环境变量覆盖 `ANOTE_DATA`**：测试/临时切换数据目录无需改配置
+- **集成测试**：test_smoke（8 屏导航）+ test_actions（5 项写操作，隔离临时目录）
+
+### 待办（P3）
 - 数据迁移向导（含 .git 一起搬 + 校验回滚）
 
 
