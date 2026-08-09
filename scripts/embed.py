@@ -15,7 +15,9 @@ import sys
 
 import numpy as np
 
-DEFAULT_NOTES = os.path.expanduser("~/Documents/Anote")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from anote_config import data_dir as _cfg_data_dir
+DEFAULT_NOTES = _cfg_data_dir()
 SKIP_DIRS = {".git", ".venv", ".semantic"}
 
 

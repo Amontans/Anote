@@ -1,5 +1,27 @@
 # 变更日志（CHANGELOG）
 
+## [Unreleased] - 0.8.0-dev（TUI 开发中）
+
+### 新增
+- **TUI 框架（P0+P1）**：Textual 8.2.8；`notes tui` 启动
+  - `AnoteContext` 数据总线：配置/数据/脚本三接口统一（后续部件唯一依赖点）
+  - `commands.py` 命令元数据单一表（帮助页+命令面板共用）
+  - 屏幕注册表：Home/Settings/Help + 5 个契约化占位页（Notes/Queue/Memory/Books/Review）
+  - 全局键位（ctrl 组合，输入框聚焦不冲突）：Ctrl+H/N/Q/M/B/R 导航、Ctrl+S 设置、F1 帮助、F5 自检、Ctrl+P 命令面板、Ctrl+D 退出
+  - 设置页：数据目录/编辑器（可选 code/vim/nvim/emacs/gedit/nano）/语言；保存即写配置
+  - 无头冒烟测试 `tui/test_smoke.py`（Textual Pilot，8 项断言）
+- **配置层**：`scripts/anote_config.py`（~/.config/anote/config，bash/python 双解析）；全部脚本默认路径改读配置
+- **编辑器可选择性**：`editor` 配置项（设置页 Select）
+
+### 变更
+- 全局导航键从单字母改为 Ctrl 组合（Textual 8.x：输入框聚焦时吞掉纯字母键，Ctrl 组合可靠）
+- 语义索引：`notes index-semantic` 移入 manage.sh（P0 配置化）
+
+### 待办（P2/P3）
+- 数据页实装（Notes/Queue/Memory/Books/Review）
+- 数据迁移向导（含 .git 一起搬 + 校验回滚）
+
+
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 风格。版本号遵循语义化版本（SemVer）。
 
 ## [0.6.0] - 2026-08-09

@@ -5,11 +5,14 @@
   index-gen.py              # 扫描 ~/Projects/notes/src 全量更新
   index-gen.py --dry        # 只打印将生成哪些索引
 """
+import sys
 import argparse
 import os
 import re
 
-DEFAULT_NOTES = os.path.expanduser("~/Documents/Anote")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from anote_config import data_dir as _cfg_data_dir
+DEFAULT_NOTES = _cfg_data_dir()
 
 INDEX_TMPL = r"""%% ===== 索引（由 index-gen.py 自动生成，勿手改）=====
 \documentclass[11pt]{ctexart}

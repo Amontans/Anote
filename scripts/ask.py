@@ -16,7 +16,9 @@ import re
 import subprocess
 import sys
 
-DEFAULT_NOTES = os.path.expanduser("~/Documents/Anote")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from anote_config import data_dir as _cfg_data_dir
+DEFAULT_NOTES = _cfg_data_dir()
 STOP = set("的了是在我有和与及而不或对从等这那被把于为还也将你他她它们什么为什么怎么如何哪个哪些哪些什么怎样能否为什么解释一下总结概括关于请问给我帮忙帮助学习科研论文笔记方法问题内容这个那个一种一种种个每个需要应该可以可能是否有没有请问我想我要我觉得我认为其实也就是比如例如比如".strip())
 
 

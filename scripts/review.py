@@ -14,7 +14,9 @@ import re
 import subprocess
 import sys
 
-DATA = os.path.expanduser("~/Documents/Anote")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from anote_config import data_dir as _cfg_data_dir
+DATA = _cfg_data_dir()
 
 
 def git_changed_since(since_dt):

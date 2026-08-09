@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""帮助页：快捷键 + 命令手册（数据来自 tui/commands.py 单一表）+ 学习路径。"""
+from textual.app import ComposeResult
+from textual.screen import Screen
+from textual.widgets import Footer, Header, Markdown
+
+from tui.commands import BINDINGS_HELP, COMMANDS
+
+
+class HelpScreen(Screen):
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=True)
+        binds = "\n".join(f"- `{k}` {d}" for k, d in BINDINGS_HELP)
+        rows = "\n".join(f"| `{cmd}` | {desc} |" for _, cmd, desc in COMMANDS)
+        yield Markdown(f"""# Anote 帮助
+
+## 快捷键
+{binds}
+
+## 命令手册
+| 命令 | 说明 |
+|------|------|
+{rows}
+
+## 2 分钟上手
+1. `notes new 数学/代数 "标题"` — 建第一篇笔记（自动 META 模板）
+2. `notes ask --semantic "问题"` — 对知识库提问
+3. `notes review` — 周回顾（AI 提炼，你确认）
+4. `notes book "书名"` — 开写教科书
+
+## 更多
+- 完整文档：`~/Projects/Anote/README.md`（含 AI 操作协议）
+- 接口契约：`docs/INTERFACES.md`
+- 忘记细节？直接问 Pi——它已读 Anote 协议
+""")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        self.title = "帮助"

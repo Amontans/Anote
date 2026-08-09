@@ -14,7 +14,11 @@
 set -e
 PROJ=~/Projects/Anote
 SKILL=$PROJ/scripts
-NOTES=~/Documents/Anote
+# 数据目录读配置（TUI/设置可改）
+if [ -f "$HOME/.config/anote/config" ]; then
+  NOTES=$(grep -E '^data_dir=' "$HOME/.config/anote/config" | head -1 | cut -d= -f2- | sed 's|^~|'"$HOME"'|')
+fi
+NOTES=${NOTES:-~/Documents/Anote}
 PYV=$NOTES/.venv/bin/python
 
 case "$1" in
@@ -103,8 +107,10 @@ EOF
     cd "$NOTES" && git add -A && git commit -m "backup: $(date '+%Y-%m-%d %H:%M')" || echo "无新变更"
     if git remote -v | grep -q push; then git push && echo "✅ 已推送远程"
     else echo "⚠️ 未配置远程: git remote add origin <gitee 地址>"; fi ;;
+  tui)
+    cd "$PROJ" && "$PYV" -m tui ;;
   all)
     python3 $SKILL/index-gen.py && python3 $SKILL/check.py ;;
   *)
-    echo "用法: notes {index|index-semantic|check|review|ask|new|project|book|book-build|chapter|commit|backup|all}" ;;
+    echo "用法: notes {index|index-semantic|check|review|ask|new|project|book|book-build|chapter|commit|backup|tui|all}" ;;
 esac

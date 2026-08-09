@@ -9,12 +9,15 @@
   5. projects/ 项目缺少 plan.tex 或 log.tex
 用法: check.py [--notes DIR]
 """
+import sys
 import argparse
 import datetime
 import os
 import re
 
-DEFAULT_NOTES = os.path.expanduser("~/Documents/Anote")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from anote_config import data_dir as _cfg_data_dir
+DEFAULT_NOTES = _cfg_data_dir()
 WARN = []
 
 
