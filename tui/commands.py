@@ -21,6 +21,7 @@ COMMANDS = [
 BINDINGS_HELP = [
     ("F1", "帮助"),
     ("Ctrl+F", "全文搜索"),
+    ("Ctrl+A", "AI 问答（经 Pi）"),
     ("Ctrl+H / N / Q / M / B / R", "主页 / 笔记 / 队列 / 记忆 / 书 / 回顾"),
     ("Ctrl+S", "设置"),
     ("F5", "运行自检"),

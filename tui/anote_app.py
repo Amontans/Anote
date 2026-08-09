@@ -14,6 +14,7 @@ from textual.binding import Binding
 
 from tui.commands import AnoteCommands
 from tui.context import AnoteContext, ConfigChanged
+from tui.screens.ask import AskScreen
 from tui.screens.books import BooksScreen
 from tui.screens.help import HelpScreen
 from tui.screens.home import HomeScreen
@@ -57,6 +58,7 @@ class AnoteApp(App):
         Binding("ctrl+d", "quit", "退出", priority=True),
         Binding("ctrl+p", "command_palette", "命令面板", priority=True),
         Binding("ctrl+f", "go_search", "全文搜索", priority=True),
+        Binding("ctrl+a", "go_ask", "AI 问答", priority=True),
     ]
     COMMANDS = [AnoteCommands]
     SCREENS = {
@@ -70,6 +72,7 @@ class AnoteApp(App):
         "books": BooksScreen,
         "review": ReviewScreen,
         "search": SearchScreen,
+        "ask": AskScreen,
     }
 
     def __init__(self, context=None):
@@ -107,6 +110,9 @@ class AnoteApp(App):
 
     def action_go_search(self):
         self.switch_screen("search")
+
+    def action_go_ask(self):
+        self.switch_screen("ask")
 
     def action_go_help(self):
         self.switch_screen("help")

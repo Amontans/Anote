@@ -2,7 +2,7 @@
 
 > **本文件是所有会话的"大脑"**：无论何时新开会话维护本项目，先读本文件 + `docs/INTERFACES.md` + `docs/ROADMAP.md`。
 > 覆盖：项目全貌、全部路径、全部命令、数据格式、环境、决策、坑、可移植性。
-> 最后更新：2026-08-09（v0.9 完成）
+> 最后更新：2026-08-09（v1.1-dev，AI 面板经 Pi 集成）
 
 ---
 
@@ -127,7 +127,7 @@ git -C ~/Documents/Anote remote add origin <gitee> && anote backup
 ## 11. 状态与待办
 
 - 已完成：P0-P3（配置层/TUI 框架/数据页/迁移向导/引导/统计）；统一入口；语义检索；教科书层；测试；全文档
-- **v0.9 已完成**（全文搜索 Ctrl+F / META 过滤 F6 / 模板 --template / 每日 anote daily）→ 见 docs/ROADMAP.md
+- **v1.1 起步：AI 问答面板经 Pi 集成**（Ctrl+A / anote ask-pi；Pi 按协议检索知识库）——注意：TUI 不直连 DeepSeek，经 Pi 代理
 - 下一步优先级：v1.1 AI 问答面板 → v0.9 完成 → v1.2 插件/MCP
 - 未闭环：数据仓库 gitee 远程未配置（`anote backup` 只提交不推送）
 

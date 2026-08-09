@@ -1,5 +1,13 @@
 # 变更日志（CHANGELOG）
 
+## [1.1.0-dev] - 2026-08-09（AI 深度集成 · 经 Pi）
+
+### 新增
+- **AI 问答面板（经 Pi 代理）**：TUI `Ctrl+A` / Home「🤖 AI 问答」按钮 / `anote ask-pi "<问题>"`
+  - 不直连 DeepSeek，而是调用 `pi -p`——Pi 自动加载 Anote 协议规则与记忆，按需 `anote ask --semantic` 检索知识库作答（实测：回答自动引用 `src/数学/代数/群论基础.tex`）
+  - 异步执行不卡 UI；Markdown 渲染回答；显示耗时
+
+
 ## [0.9.0] - 2026-08-09（检索增强）
 
 ### 新增

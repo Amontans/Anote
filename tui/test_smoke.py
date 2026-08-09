@@ -6,6 +6,7 @@ import shutil
 import tempfile
 
 from tui.anote_app import AnoteApp
+from tui.screens.ask import AskScreen
 from tui.screens.books import BooksScreen
 from tui.screens.help import HelpScreen
 from tui.screens.home import HomeScreen
@@ -58,12 +59,13 @@ async def main():
             await pilot.pause(0.2)
             await pilot.press("ctrl+s"); assert isinstance(app.screen, SettingsScreen)
             await pilot.press("ctrl+f"); assert isinstance(app.screen, SearchScreen)
+            await pilot.press("ctrl+a"); assert isinstance(app.screen, AskScreen)
             await pilot.press("ctrl+h"); assert isinstance(app.screen, HomeScreen)
             await pilot.press("f1"); assert isinstance(app.screen, HelpScreen)
             await pilot.press("ctrl+h"); assert isinstance(app.screen, HomeScreen)
             await pilot.press("f5")
             await pilot.pause(0.2)
-            print("SMOKE OK: 9 屏导航 + 挂载全部通过")
+            print("SMOKE OK: 10 屏导航 + 挂载全部通过")
     finally:
         os.environ.pop("ANOTE_DATA", None)
         shutil.rmtree(TMP, ignore_errors=True)

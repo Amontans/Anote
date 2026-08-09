@@ -183,3 +183,34 @@ class AnoteContext:
             if len(results) >= max_results:
                 break
         return results
+
+
+    # ---- AI 问答（经 Pi 代理 → DeepSeek）----
+    def _pi_bin(self):
+        import shutil
+        return shutil.which("pi") or os.path.expanduser("~/.bun/bin/pi")
+
+    def run_pi(self, prompt, timeout=180):
+        """调用 Pi（-p 打印模式）回答问题。Pi 会自动加载 Anote 规则/记忆/技能。"""
+        try:
+            proc = subprocess.run([self._pi_bin(), "-p", prompt],
+                                  capture_output=True, text=True, timeout=timeout)
+            return RunResult(proc.stdout.strip(), proc.stderr.strip(), proc.returncode)
+        except subprocess.TimeoutExpired:
+            return RunResult("", "Pi 响应超时", 124)
+        except FileNotFoundError:
+            return RunResult("", "未找到 pi 命令", 127)
+
+    async def run_pi_async(self, prompt, timeout=180):
+        """异步调用 Pi（TUI 内不阻塞界面）。"""
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                self._pi_bin(), "-p", prompt,
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            out, err = await asyncio.wait_for(proc.communicate(), timeout)
+            return RunResult(out.decode("utf-8", "ignore").strip(),
+                             err.decode("utf-8", "ignore").strip(), proc.returncode)
+        except asyncio.TimeoutError:
+            return RunResult("", "Pi 响应超时", 124)
+        except FileNotFoundError:
+            return RunResult("", "未找到 pi 命令", 127)
