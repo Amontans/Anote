@@ -18,6 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from anote_config import data_dir as _cfg_data_dir
 DATA = _cfg_data_dir()
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def git_changed_since(since_dt):
     """用 git log 找 since 之后改动的 .tex/.md 文件。"""
@@ -96,4 +98,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_cli.run(main))

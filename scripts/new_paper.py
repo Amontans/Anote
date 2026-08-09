@@ -92,6 +92,8 @@ MD_TMPL = """# %%TITLE%%
 > 用 literature-search 导出 BibTeX；pandoc --citeproc 渲染
 """
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def main():
     ap = argparse.ArgumentParser(description="New paper skeleton")
@@ -119,4 +121,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_cli.run(main))

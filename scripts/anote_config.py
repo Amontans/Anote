@@ -1,66 +1,43 @@
 #!/usr/bin/env python3
-"""Anote 唯一配置源（bash 与 python 共用 ~/.config/anote/config，KEY=VALUE）。
+"""配置兼容层（shim）：统一到 anote.core.Config 单一实现（DRY）。
 
-所有脚本的默认数据目录从此处读取——data_dir 可被 TUI 设置页更改。
-bash 侧解析:  $(grep -E '^data_dir=' ~/.config/anote/config | cut -d= -f2-)
+旧脚本 `from anote_config import data_dir` 继续可用；新代码直接用 anote.core.Config。
+接口声明（契约）:
+    输入: argv（set 键 值 / 无参数=打印全部）
+    输出: stdout=配置表或提示；stderr=错误；退出码 0/1
+    副作用: set 时写 ~/.config/anote/config
 """
 import os
+import sys
 
-CONFIG_PATH = os.path.expanduser("~/.config/anote/config")
-
-DEFAULTS = {
-    "data_dir": os.path.expanduser("~/Documents/Anote"),
-    "editor": "code",
-    "lang": "zh",
-    "semantic_model": "BAAI/bge-small-zh-v1.5",
-    "onboarded": "false",
-}
-
-# 编辑器可选值（TUI 设置页 Select 用）
-EDITOR_CHOICES = ["code", "vim", "nvim", "emacs", "gedit", "nano"]
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote.core import Config  # noqa: E402
 
 
-def load():
-    """读取配置，缺项用默认值。文件不存在返回默认。"""
-    cfg = dict(DEFAULTS)
-    try:
-        with open(CONFIG_PATH, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line and "=" in line and not line.startswith("#"):
-                    k, _, v = line.partition("=")
-                    cfg[k.strip()] = v.strip()
-    except FileNotFoundError:
-        pass
-    return cfg
+def load() -> dict:
+    c = Config.load()
+    return {k: str(getattr(c, k)) for k in c.__dataclass_fields__}
 
 
-def get(key, default=None):
-    return load().get(key, default)
+def get(key: str, default=None):
+    return getattr(Config.load(), key, default)
 
 
-def data_dir():
-    """返回展开后的数据目录：优先 ANOTE_DATA 环境变量（测试/临时覆盖），再读配置。"""
-    env = os.environ.get("ANOTE_DATA")
-    if env:
-        return os.path.expanduser(env)
-    return os.path.expanduser(load().get("data_dir", DEFAULTS["data_dir"]))
+def data_dir() -> str:
+    return str(Config.load().data_dir)
 
 
-def set(key, value):
-    """写回配置（保留其他键）。"""
-    cfg = load()
-    cfg[key] = str(value)
-    os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        for k, v in cfg.items():
-            f.write(f"{k}={v}\n")
+def set(key: str, value: str) -> None:
+    Config.load().set(key, value)
 
 
-if __name__ == "__main__":
-    import sys
+def main() -> None:
     if len(sys.argv) >= 3 and sys.argv[1] == "set":
         set(sys.argv[2], sys.argv[3])
     else:
         for k, v in load().items():
             print(f"{k}={v}")
+
+
+if __name__ == "__main__":
+    sys.exit(__import__("anote.cli", fromlist=["run"]).run(main))

@@ -28,6 +28,8 @@ INDEX_TMPL = r"""%% ===== 索引（由 index-gen.py 自动生成，勿手改）=
 \end{document}
 """
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def escape(s):
     return re.sub(r"[_&%#$]", r"\\\g<0>", s)

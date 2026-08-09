@@ -7,6 +7,8 @@ import subprocess
 import sys
 import urllib.request
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def arxiv_pdf(arxivid, out_dir):
     url = f"https://arxiv.org/pdf/{arxivid}"
@@ -122,4 +124,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_cli.run(main))

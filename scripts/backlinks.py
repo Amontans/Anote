@@ -15,6 +15,8 @@ from pathlib import Path
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from anote.core import Config  # noqa: E402
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -75,4 +77,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_cli.run(main))

@@ -4,6 +4,8 @@ import argparse
 import os
 import subprocess
 import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def main():
     ap = argparse.ArgumentParser(description="Extract text from PDF")
@@ -20,4 +22,4 @@ def main():
     print(f"{a.pdf} -> {out} (约 {words} 词)")
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_cli.run(main))

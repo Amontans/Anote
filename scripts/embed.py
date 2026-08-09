@@ -20,6 +20,8 @@ from anote_config import data_dir as _cfg_data_dir
 DEFAULT_NOTES = _cfg_data_dir()
 SKIP_DIRS = {".git", ".venv", ".semantic"}
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def chunk_text(text):
     r"""按 \section 切块；剔除注释/META/LaTeX 命令；超长块再按中文句读切。"""
@@ -113,4 +115,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_cli.run(main))

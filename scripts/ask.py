@@ -21,6 +21,8 @@ from anote_config import data_dir as _cfg_data_dir
 DEFAULT_NOTES = _cfg_data_dir()
 STOP = set("的了是在我有和与及而不或对从等这那被把于为还也将你他她它们什么为什么怎么如何哪个哪些哪些什么怎样能否为什么解释一下总结概括关于请问给我帮忙帮助学习科研论文笔记方法问题内容这个那个一种一种种个每个需要应该可以可能是否有没有请问我想我要我觉得我认为其实也就是比如例如比如".strip())
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def extract_keywords(question):
     """从自然语言问题提取检索词：先剥离停用词，再取 2-6 字中文串 + 3+ 字母英文词。"""
@@ -131,4 +133,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_cli.run(main))

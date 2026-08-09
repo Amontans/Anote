@@ -25,6 +25,8 @@ from anote_config import set as cfg_set  # noqa: E402
 EXCLUDE = {".semantic", ".venv"}
 LOG_PATH = os.path.expanduser("~/.config/anote/migration.log")
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote import cli as _cli  # noqa: E402
 
 def log(msg):
     os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
@@ -162,4 +164,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_cli.run(main))

@@ -1,5 +1,19 @@
 # 变更日志（CHANGELOG）
 
+## [1.2.0] - 2026-08-09（插件 + MCP + 现代化完善）
+
+### 新增
+- **插件机制**：`plugins/` 目录 + `anote plugin {list|add|run}`（示例插件已装）
+- **MCP Server**：`anote mcp`（stdio，fastmcp）；5 工具（anote_stats/search/ask/queue/notes）；实测握手+调用全通
+- **统一 CLI 基础设施**：`src/anote/cli.py`（run 守卫：异常→单行可读错误+退出码；Result 自动输出）
+- **模块契约声明**：全部 15 个脚本 docstring 含"接口声明（输入/输出/副作用）"
+- **配置单点化**：anote_config.py 重构为 core.Config 兼容层（消除双解析）
+- **MCP 测试**：tests/test_mcp.py（握手 + 工具调用）
+- **发展方向规划**：ROADMAP 新增愿景（知识编译层/插件生态/Pi 互操作/开源发布）
+
+### 修复
+- fastmcp 横幅污染 stdout → 显式 transport="stdio"
+
 ## [1.1.0] - 2026-08-09（AI 深度集成 · 经 Pi + 现代化改造）
 
 ### 新增（v1.1 路线图三项）
