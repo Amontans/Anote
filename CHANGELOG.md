@@ -27,8 +27,11 @@
 - **环境变量覆盖 `ANOTE_DATA`**：测试/临时切换数据目录无需改配置
 - **集成测试**：test_smoke（8 屏导航）+ test_actions（5 项写操作，隔离临时目录）
 
-### 待办（P3）
-- 数据迁移向导（含 .git 一起搬 + 校验回滚）
+### 新增（P3 + 统计）
+- **数据迁移向导**：`scripts/migrate.py` + TUI 设置页接线（异步执行不卡 UI）；含 .git 随迁、文件数校验、失败回滚配置、--preview、--with-env 重建 venv；迁移日志 ~/.config/anote/migration.log
+- **新手引导 Onboarding**：首次运行 3 步走完（首次真实运行出现，ANOTE_DATA 环境跳过）
+- **文件统计**：`scripts/stats.py` + `anote stats`（笔记/论文/书/章/项目/回顾/队列/记忆条目/PDF/编译产物）；Home 仪表盘展示
+- **功能路线图**：docs/ROADMAP.md（v0.9 检索增强 → v1.4 体验，参考 Pi/Obsidian/笔记软件）
 
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 风格。版本号遵循语义化版本（SemVer）。

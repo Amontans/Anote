@@ -27,12 +27,18 @@ class HomeScreen(Screen):
     def refresh_stats(self):
         ctx = self.app.context
         counts = ctx.queue_counts()
-        sem = "✓" if ctx.semantic_ready() else "✗（notes index-semantic）"
+        st = ctx.stats()
+        sem = "✓" if ctx.semantic_ready() else "✗（anote index-semantic）"
+        n = st.get("笔记总数", ctx.note_count())
+        b = st.get("教科书", 0)
+        ch = st.get("章节", 0)
+        p = st.get("论文精读", 0)
+        rv = st.get("回顾草稿", 0)
         self.query_one("#stats", Static).update(
-            f"**数据目录** `{ctx.data_dir}`  |  **笔记** {ctx.note_count()} 篇\n\n"
-            f"**队列** 📥{counts['📥']} 📖{counts['📖']} ✅{counts['✅']} 🗄{counts['🗄']}  |  "
-            f"**语义索引** {sem}  |  **最近回顾** {ctx.last_review()}\n\n"
-            f"**编辑器** {ctx.editor}（可在设置中更改）"
+            f"**数据目录** `{ctx.data_dir}`\n\n"
+            f"📝 笔记 **{n}** · 📄 论文 **{p}** · 📚 书 **{b}**（章 {ch}）· 🔄 回顾 **{rv}**\n"
+            f"📥 队列 📥{counts['📥']} 📖{counts['📖']} ✅{counts['✅']} 🗄{counts['🗄']}\n\n"
+            f"语义索引 {sem} · 最近回顾 {ctx.last_review()} · 编辑器 {ctx.editor}"
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

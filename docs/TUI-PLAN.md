@@ -1,6 +1,6 @@
 # Anote TUI 规划书（v0.7 设计文档）
 
-> 状态：P0+P1+P2 已实现（v0.8.0-dev）。P3（迁移向导）待开发。目标：为 Anote 增加一个类 Pi Agent 的终端 TUI，让使用者**超快上手、忘记随时可查**，且**维护成本最低**。
+> 状态：P0-P3 全部实现（v0.8.0-dev）。功能规划见 docs/ROADMAP.md。目标：为 Anote 增加一个类 Pi Agent 的终端 TUI，让使用者**超快上手、忘记随时可查**，且**维护成本最低**。
 
 ## 一、设计原则（决定一切的三个铁律）
 
@@ -142,8 +142,8 @@ m 记忆  b 书  r 回顾  s 设置  esc 返回  F5 运行 check  Ctrl+D 退出
 | P0 | 配置化：anote_config.py + manage.sh/scripts 改读 config | ✅ 已完成（实测改 data_dir 后脚本跟随） |
 | P1 | TUI 骨架：Textual 入口 + Home + Help + Settings 框架 | ✅ 已完成（冒烟测试 8 项通过；键位改 Ctrl 组合） |
 | P2 | 数据页：Notes/Queue/Memory/Books/Review | ✅ 已完成（含写操作+集成测试） |
-| P3 | 数据迁移向导（含 .git 一起搬 + 校验回滚）+ Onboarding | 待开发 |
-| P4 | 命令面板、空状态、文档同步、测试 | v0.8.0 发布 |
+| P3 | 数据迁移向导（含 .git 一起搬 + 校验回滚）+ Onboarding | ✅ 已完成（migrate.py + TUI 异步接线 + 引导页） |
+| P4 | 命令面板、空状态、文档同步、测试 | ✅ 已完成（命令面板/空状态/双测试/文档同步） |
 
 ## 十、待确认决策（实现前需要你拍板）
 

@@ -8,6 +8,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Label, Select, Static
 
 from tui.context import ConfigChanged
+from tui.widgets.modals import OutputModal, PromptModal
 
 EDITOR_CHOICES = ["code", "vim", "nvim", "emacs", "gedit", "nano"]
 
@@ -26,7 +27,7 @@ class SettingsScreen(Screen):
         yield Select([("中文", "zh"), ("English", "en")], id="lang")
         yield Horizontal(
             Button("保存 (F2)", id="save"),
-            Button("迁移数据位置…（P3）", id="migrate", disabled=True),
+            Button("迁移数据位置…", id="migrate"),
         )
         yield Footer()
 
@@ -40,7 +41,18 @@ class SettingsScreen(Screen):
         if event.button.id == "save":
             self.action_save()
         elif event.button.id == "migrate":
-            self.notify("迁移向导将在 P3 实现（rsync + .git 一起搬 + 校验回滚）")
+            self.app.push_screen(PromptModal("迁移数据目录", "新路径（如 ~/Documents/Anote2）", on_submit=self._migrate))
+
+    def _migrate(self, target: str) -> None:
+        if not target.strip():
+            return
+        self.app.run_worker(self._migrate_async(target.strip()))
+
+    async def _migrate_async(self, target: str) -> None:
+        self.notify(f"迁移中：{target} …（含 .git 历史，请稍候）")
+        r = await self.app.context.run_script_async("migrate.py", "--to", target, "--force", "--with-env")
+        self.app.push_screen(OutputModal("迁移结果", (r.stdout or "") + (r.stderr or "")))
+        self.app.post_message(ConfigChanged())
 
     def action_save(self) -> None:
         ctx = self.app.context

@@ -7,6 +7,8 @@
 - 命令执行：self.app.context.run_script(...)（薄壳原则）
 - 设置变更：SettingsScreen 发 ConfigChanged → 本应用转发刷新
 """
+import os
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 
@@ -16,6 +18,7 @@ from tui.screens.books import BooksScreen
 from tui.screens.help import HelpScreen
 from tui.screens.home import HomeScreen
 from tui.screens.memory import MemoryScreen
+from tui.screens.onboarding import OnboardingScreen
 from tui.screens.notes import NotesScreen
 from tui.screens.queue import QueueScreen
 from tui.screens.review import ReviewScreen
@@ -58,6 +61,7 @@ class AnoteApp(App):
         "home": HomeScreen,
         "settings": SettingsScreen,
         "help": HelpScreen,
+        "onboarding": OnboardingScreen,
         "notes": NotesScreen,
         "queue": QueueScreen,
         "memory": MemoryScreen,
@@ -70,7 +74,11 @@ class AnoteApp(App):
         self.context = context or AnoteContext()
 
     def on_mount(self) -> None:
-        self.push_screen("home")
+        # 首次运行引导（测试/临时环境经 ANOTE_DATA 跳过）
+        if self.context.config.get("onboarded", "false") != "true" and not os.environ.get("ANOTE_DATA"):
+            self.push_screen("onboarding")
+        else:
+            self.push_screen("home")
 
     # ---- 导航 ----
     def action_go_home(self):

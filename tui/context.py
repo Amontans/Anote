@@ -4,6 +4,8 @@
 所有屏幕/部件只依赖本类读取配置、读取数据、调用脚本——不直接碰文件系统细节。
 未来新增部件（队列表格、笔记树等）一律经此访问，保证接口单一、可测。
 """
+import asyncio
+import json
 import os
 import subprocess
 import sys
@@ -75,6 +77,19 @@ class AnoteContext:
     def script_path(self, name):
         return os.path.join(PROJECT_ROOT, "scripts", name)
 
+    async def run_script_async(self, name, *args, timeout=1800):
+        """异步脚本调用（TUI 内不阻塞界面，迁移等长任务用）。"""
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                sys.executable, self.script_path(name), *args,
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            out, err = await asyncio.wait_for(proc.communicate(), timeout)
+            return RunResult(out.decode("utf-8", "ignore"), err.decode("utf-8", "ignore"), proc.returncode)
+        except asyncio.TimeoutError:
+            return RunResult("", "超时", 124)
+        except FileNotFoundError:
+            return RunResult("", f"脚本不存在: {name}", 127)
+
     def run_script(self, name, *args, timeout=120):
         try:
             proc = subprocess.run(
@@ -127,3 +142,22 @@ class AnoteContext:
             return "无"
         files = [f for f in os.listdir(d) if f.endswith(".md")]
         return max(files, key=lambda f: os.path.getmtime(os.path.join(d, f))) if files else "无"
+
+
+    # ---- 统计与迁移 ----
+    def stats(self):
+        """统计各类文件数（anote stats --json）。"""
+        r = self.run_script("stats.py", "--json", timeout=30)
+        if not r.ok:
+            return {}
+        try:
+            return json.loads(r.stdout)
+        except Exception:  # noqa: BLE001
+            return {}
+
+    def migrate_data_dir(self, target, with_env=True):
+        """迁移数据目录（含 .git），返回 RunResult。"""
+        args = ["--to", target, "--force"]
+        if with_env:
+            args.append("--with-env")
+        return self.run_script("migrate.py", *args, timeout=1800)

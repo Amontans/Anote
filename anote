@@ -31,6 +31,8 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote index                   重建分层索引
   anote index-semantic          重建语义索引
   anote check                   一致性自检（6 项）
+  anote stats                   统计各类文件数
+  anote migrate --to <路径>     迁移数据目录（含 .git，安全回滚）
   anote review [--days 30]      生成周/月回顾草稿
   anote project <名> [目标]     新建研究项目
   anote book <书名> [作者]      新建教科书
@@ -94,6 +96,11 @@ XEOF
     HF_ENDPOINT=https://hf-mirror.com "$PYV" "$SKILL/embed.py" "$@" ;;
   check)
     python3 "$SKILL/check.py" ;;
+  stats)
+    python3 "$SKILL/stats.py" "${@:1}" ;;
+  migrate)
+    # anote migrate --to <新路径> [--preview] [--force] [--with-env]
+    python3 "$SKILL/migrate.py" "$@" ;;
   review)
     python3 "$SKILL/review.py" "$@" ;;
   project)
