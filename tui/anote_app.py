@@ -80,6 +80,10 @@ class AnoteApp(App):
         self.context = context or AnoteContext()
 
     def on_mount(self) -> None:
+        try:
+            self.theme = self.context.config.get("theme", "textual-dark")
+        except Exception:  # noqa: BLE001
+            pass
         # 首次运行引导（测试/临时环境经 ANOTE_DATA 跳过）
         if self.context.config.get("onboarded", "false") != "true" and not os.environ.get("ANOTE_DATA"):
             self.push_screen("onboarding")

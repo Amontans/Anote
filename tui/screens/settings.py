@@ -11,6 +11,7 @@ from tui.context import ConfigChanged
 from tui.widgets.modals import OutputModal, PromptModal
 
 EDITOR_CHOICES = ["code", "vim", "nvim", "emacs", "gedit", "nano"]
+THEMES = ["textual-dark", "textual-light", "nord", "gruvbox", "monokai", "tokyo-night"]
 
 
 class SettingsScreen(Screen):
@@ -25,6 +26,8 @@ class SettingsScreen(Screen):
         yield Select([(e, e) for e in EDITOR_CHOICES], id="editor")
         yield Label("界面语言")
         yield Select([("中文", "zh"), ("English", "en")], id="lang")
+        yield Label("TUI 主题")
+        yield Select([(t, t) for t in THEMES], id="theme")
         yield Horizontal(
             Button("保存 (F2)", id="save"),
             Button("迁移数据位置…", id="migrate"),
@@ -36,6 +39,10 @@ class SettingsScreen(Screen):
         self.query_one("#data_dir", Input).value = ctx.data_dir
         self.query_one("#editor", Select).value = ctx.editor
         self.query_one("#lang", Select).value = ctx.lang
+        try:
+            self.query_one("#theme", Select).value = ctx.config.get("theme", "textual-dark")
+        except Exception:  # noqa: BLE001
+            pass
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "save":
@@ -65,5 +72,12 @@ class SettingsScreen(Screen):
         lang = self.query_one("#lang", Select).value
         if lang:
             ctx.set_config("lang", str(lang))
+        try:
+            th = self.query_one("#theme", Select).value
+            if th:
+                ctx.set_config("theme", str(th))
+                self.app.theme = str(th)
+        except Exception:  # noqa: BLE001
+            pass
         self.app.post_message(ConfigChanged())
         self.notify("设置已保存")

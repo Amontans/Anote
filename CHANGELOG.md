@@ -1,5 +1,15 @@
 # 变更日志（CHANGELOG）
 
+## [1.6.0] - 2026-08-10（体验与图谱 + 模块化）
+
+### 新增
+- **`anote graph [--mermaid]`**：知识图谱（META 标签 → 引用笔记，邻接表 + mermaid 流程图）
+- **`anote report`**：周报自动生成（回顾草稿节选 + 数据统计 + 下周建议，memory/reports/）
+- **TUI 主题系统**：Settings 选择（textual-dark/light/nord/gruvbox/monokai/tokyo-night），保存即生效
+- **帮助分层**：`anote help <命令>` 单命令详解
+- **流程完善**：docs/PROCESS.md（六步版本生命周期）+ `anote release <major|minor|patch>` 发布门禁
+- **模块化重构**：services.py → services/ 包（queue/notes/stats/bib 一领域一模块，向后兼容重导出）
+
 ## [1.5.0] - 2026-08-10（多端协作 + CI 门禁）
 
 ### 新增

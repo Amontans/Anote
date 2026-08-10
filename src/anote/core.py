@@ -29,6 +29,7 @@ class Config:
     semantic_model: str = "BAAI/bge-small-zh-v1.5"
     onboarded: str = "false"
     ai_provider: str = "pi"   # AI 层：默认经 Pi 代理（不直连模型）
+    theme: str = "textual-dark"  # TUI 主题（Textual 内置）
 
     @classmethod
     def load(cls) -> "Config":

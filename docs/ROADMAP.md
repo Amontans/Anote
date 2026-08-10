@@ -21,7 +21,7 @@
 | 版本 | 内容 |
 |------|------|
 | **v1.5 多端协作 + 门禁** | Web 只读外壳（仅 127.0.0.1+口令）；Syncthing+KOReader 移动阅读；自动备份定时器；`anote export` 整库导出；**`anote test` 一键测试 + git hook 门禁** |
-| **v1.6 体验图谱** | 知识图谱视图（META 标签/反链可视化）；主题系统；英文 UI；周报自动生成；**帮助分层 + `anote help <命令>`** |
+| **v1.6 体验图谱** | `anote graph [--mermaid]` 图谱；主题系统（Settings 选择）；`anote report` 周报；`anote help <命令>` 分层 | ✅ 核心完成（i18n 转 P2） |
 
 ### 阶段三 · 规模与安全
 | 版本 | 内容 |
