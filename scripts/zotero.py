@@ -16,21 +16,32 @@ from anote.core import Config  # noqa: E402
 
 ZOTERO_DIR = Path("~/.zotero/zotero").expanduser()
 
-SETUP_GUIDE = """Zotero + Better BibTeX 接入步骤（一次性）：
+SETUP_GUIDE = """Zotero + Better BibTeX 接入步骤（已确认插件安装成功）：
 
-1. 安装 Better BibTeX 插件：
-   - 已下载: ~/Downloads/zotero-better-bibtex-9.0.55.xpi
-   - Zotero → 工具 → 插件 → ⚙️ → 从文件安装插件… → 选择该 xpi → 重启 Zotero
+1. 往 Zotero 添加文献（当前库为空：0 条目）——用浏览器连接器抓取或手动添加。
 
-2. 自动导出 refs.bib（二选一）：
-   A. 整库导出：右键 我的文库 → 导出 → 格式选 Better BibTeX → 勾选"保持更新"（自动导出到 ~/Documents/Anote/refs.bib）
-   B. 或文件夹导出：对特定收藏夹重复上述操作
-   （导出时勾选"导出文件到库"可把 PDF 一并管理）
+2. 导出 refs.bib（注意格式！）：
+   右键 我的文库 → 导出 → 格式下拉框：
+   ✅ 选 "Better BibTeX"（不要选 "Better BibTeX JSON"！）
+   ✅ 勾选 "保持更新"（之后 Zotero 每次改动自动写 refs.bib）
+   → 保存到 ~/Documents/Anote/refs.bib
 
-3. 验证：运行  anote zotero bib  应显示条目统计；anote bibcheck 校验引用链路
+3. 验证：anote zotero bib 应显示条目统计；anote bibcheck 校验引用链路
 """
 
 BIB_ENTRY = re.compile(r"@(\w+)\{([^,]+),", re.M)
+
+
+def _bbt_installed() -> str:
+    """检测 Better BibTeX 插件（扫描 Zotero profile 的 extensions.json）。"""
+    try:
+        if ZOTERO_DIR.is_dir():
+            for p in ZOTERO_DIR.rglob("extensions.json"):
+                if "better-bibtex" in p.read_text(encoding="utf-8", errors="ignore"):
+                    return "✓ 已安装"
+    except Exception:  # noqa: BLE001
+        pass
+    return ""
 
 
 def parse_bib(path: Path) -> list[tuple[str, str]]:
@@ -70,7 +81,9 @@ def main() -> int:
         return 0
 
     # status
+    bbt = _bbt_installed()
     print(f"Zotero 数据目录: {ZOTERO_DIR}  {'✓' if ZOTERO_DIR.exists() else '✗（首次启动 Zotero 后生成）'}")
+    print(f"Better BibTeX 插件: {bbt or '✗ 未安装（见 anote zotero setup）'}")
     print(f"refs.bib: {refs}  {'✓' if refs.exists() else '✗（待 Better BibTeX 导出）'}")
     if refs.exists():
         print(f"refs.bib 条目: {len(parse_bib(refs))}")
