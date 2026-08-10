@@ -36,6 +36,8 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote backlinks "<概念>"       反链：谁引用了这个概念
   anote plugin {list\|add\|run}   插件机制
   anote mcp                    MCP Server（外部 AI 工具接入）
+  anote zotero {status\|bib\|setup}  Zotero 文献接入
+  anote bibcheck                引用链路校验（cite↔refs.bib）
   anote index                   重建分层索引
   anote index-semantic          重建语义索引
   anote check                   一致性自检（6 项）
@@ -95,6 +97,11 @@ case "$cmd" in
     pi -p "$*" ;;
   ask-ai)
     "$PYV" "$SKILL/ask.py" "$@" ;;
+  zotero)
+    # anote zotero {status|bib|setup}
+    python3 "$SKILL/zotero.py" "$@" ;;
+  bibcheck)
+    python3 "$SKILL/bibcheck.py" ;;
   mcp)
     # anote mcp —— MCP Server（stdio，供外部 AI 工具调用）
     "$PYV" "$SKILL/mcp_server.py" ;;

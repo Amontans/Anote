@@ -1,5 +1,13 @@
 # 变更日志（CHANGELOG）
 
+## [1.3.0-dev] - 2026-08-10（Zotero 文献闭环）
+
+### 新增
+- Better BibTeX 9.0.55 插件已下载（~/Downloads/zotero-better-bibtex-9.0.55.xpi，待 GUI 安装）
+- `anote zotero {status|bib|setup}`：状态/refs.bib 统计/接入指引
+- `anote bibcheck`：引用链路校验（笔记 cite ↔ refs.bib 一致性，缺失键/冗余条目）
+- ROADMAP 自审：规划欠缺分析（备份恢复/检索质量/写作输出/AI 降级/META 自动补全/CI/访问控制/归档/帮助分层）
+
 ## [1.2.0] - 2026-08-09（插件 + MCP + 现代化完善）
 
 ### 新增
