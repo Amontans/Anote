@@ -136,3 +136,22 @@ class TestBibService(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestWikiGroup(unittest.TestCase):
+    def test_group(self):
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+        from wiki import group_notes
+        from anote.services import Note
+        notes = [
+            Note(Path("/x"), "src/数学/代数/环论.tex", "环论", {"学科": "数学", "分支": "代数"}),
+            Note(Path("/x"), "src/数学/代数/群论.tex", "群论", {"学科": "数学", "分支": "代数"}),
+            Note(Path("/x"), "src/物理/量子/态.tex", "态", {}),  # 目录推断
+        ]
+        g = group_notes(notes)
+        self.assertEqual(len(g[("数学", "代数")]), 2)
+        self.assertEqual(len(g[("物理", "量子")]), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

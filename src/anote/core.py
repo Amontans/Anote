@@ -28,6 +28,7 @@ class Config:
     lang: str = "zh"
     semantic_model: str = "BAAI/bge-small-zh-v1.5"
     onboarded: str = "false"
+    ai_provider: str = "pi"   # AI 层：默认经 Pi 代理（不直连模型）
 
     @classmethod
     def load(cls) -> "Config":
@@ -96,3 +97,26 @@ def ensure_import() -> None:
     """让 scripts/*.py（薄适配器）能 import anote 包。"""
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
+
+
+def ai_ask(prompt: str, timeout: int = 180) -> Result:
+    """统一 AI 入口：经 Config.ai_provider 调用（当前唯一实现=pi 代理）。
+
+    - provider=pi: 调用 `pi -p`（Pi 自动加载 Anote 协议/规则/记忆，可检索知识库）
+    - 未来可扩展其他 provider（如直连 API），对上层透明（依赖注入）
+    """
+    import shutil
+    import subprocess
+    cfg = Config.load()
+    if cfg.ai_provider == "pi":
+        pi_bin = shutil.which("pi") or str(Path.home() / ".bun/bin/pi")
+        try:
+            proc = subprocess.run([pi_bin, "-p", prompt], capture_output=True,
+                                  text=True, timeout=timeout)
+            return Result(proc.returncode == 0, stdout=proc.stdout.strip(), stderr=proc.stderr.strip(),
+                          exit_code=proc.returncode)
+        except subprocess.TimeoutExpired:
+            return Result.failure("AI 响应超时", 124)
+        except FileNotFoundError:
+            return Result.failure("未找到 pi 命令", 127)
+    return Result.failure(f"未支持的 ai_provider: {cfg.ai_provider}")

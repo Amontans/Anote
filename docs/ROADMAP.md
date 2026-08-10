@@ -15,7 +15,7 @@
 | 版本 | 内容 | 状态 |
 |------|------|:---:|
 | **v1.3 Zotero 文献闭环** | Better BibTeX→refs.bib；`anote zotero`（status/bib/setup）；`anote bibcheck`；BibService（DRY）；stats/check 第7项/MCP anote_bib 集成 | ✅ anote 侧完成（GUI 步骤待用户：装插件+导出 refs.bib） |
-| **v1.4 知识编译 + 数据质量** | `wiki.py` 主题页编译（经 Pi）；三层知识联动；**`anote meta` META 自动补全（经 Pi 建议，你确认）**；**AI provider 抽象**（Config 加 ai_provider，降级=纯本地检索） | ⬜ |
+| **v1.4 知识编译 + 数据质量** | `anote wiki`（--dry/--force/--branch，经 Pi 编译主题页）；`anote meta`（--ai 经 Pi 补全）；`core.ai_ask` AI provider 抽象（默认 pi） | ✅ 核心完成 |
 
 ### 阶段二 · 体验与质量
 | 版本 | 内容 |

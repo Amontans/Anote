@@ -1,5 +1,13 @@
 # 变更日志（CHANGELOG）
 
+## [1.4.0] - 2026-08-10（知识编译 + 数据质量）
+
+### 新增
+- **`anote wiki` 知识编译层**（LLM Wiki 范式）：按 学科/分支 把 src/ 笔记经 Pi 编译成 L1 主题页（wiki/目录，MD 派生产物可重建）；--dry/--force/--branch
+- **`anote meta`**：META 完整性报告；--ai 经 Pi 生成补全建议（实测：标签建议+学科对齐提示）
+- **AI provider 抽象**：`core.ai_ask()` 统一 AI 入口（Config.ai_provider，默认 pi 代理；未来可扩展直连，对上层透明）
+- 单测 12 项全绿（新增 TestWikiGroup）
+
 ## [1.3.0-dev] - 2026-08-10（Zotero 文献闭环）
 
 ### 新增

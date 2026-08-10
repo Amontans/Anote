@@ -34,6 +34,8 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote ask --semantic "<问题>" 知识库语义问答
   anote ask-pi "<问题>"        经 Pi 回答（可检索知识库）
   anote backlinks "<概念>"       反链：谁引用了这个概念
+  anote meta [--ai] [--apply]  META 检查/经 Pi 补全建议
+  anote wiki [--dry] [--force] 知识编译：笔记 → 学科主题页
   anote plugin {list\|add\|run}   插件机制
   anote mcp                    MCP Server（外部 AI 工具接入）
   anote zotero {status\|bib\|setup}  Zotero 文献接入
@@ -122,6 +124,12 @@ case "$cmd" in
         "$PYV" "$p" "$@" ;;
       *) echo "用法: anote plugin {list|add|run}"; exit 1 ;;
     esac ;;
+  wiki)
+    # anote wiki [--dry] [--branch 学科/分支] [--force] —— 知识编译层
+    python3 "$SKILL/wiki.py" "$@" ;;
+  meta)
+    # anote meta [--ai] [--apply] —— META 元数据检查/补全
+    python3 "$SKILL/meta.py" "$@" ;;
   backlinks)
     # anote backlinks "<概念>" —— 反链视图
     [ -z "$1" ] && { echo "用法: anote backlinks \"<概念>\""; exit 1; }
