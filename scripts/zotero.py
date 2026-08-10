@@ -14,7 +14,8 @@ from pathlib import Path
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from anote.core import Config  # noqa: E402
 
-ZOTERO_DIR = Path("~/.zotero/zotero").expanduser()
+ZOTERO_DATA = Path("~/Zotero").expanduser()
+ZOTERO_PROFILE = Path("~/.zotero/zotero").expanduser()
 
 SETUP_GUIDE = """Zotero + Better BibTeX 接入步骤（已确认插件安装成功）：
 
@@ -35,13 +36,30 @@ BIB_ENTRY = re.compile(r"@(\w+)\{([^,]+),", re.M)
 def _bbt_installed() -> str:
     """检测 Better BibTeX 插件（扫描 Zotero profile 的 extensions.json）。"""
     try:
-        if ZOTERO_DIR.is_dir():
-            for p in ZOTERO_DIR.rglob("extensions.json"):
+        if ZOTERO_PROFILE.is_dir():
+            for p in ZOTERO_PROFILE.rglob("extensions.json"):
                 if "better-bibtex" in p.read_text(encoding="utf-8", errors="ignore"):
                     return "✓ 已安装"
     except Exception:  # noqa: BLE001
         pass
     return ""
+
+
+
+
+def _library_count() -> int:
+    """只读读取 Zotero 库条目数（~Zotero/zotero.sqlite，排除附件/笔记）。"""
+    try:
+        import sqlite3
+        db = ZOTERO_DATA / "zotero.sqlite"
+        if not db.exists():
+            return -1  # 未初始化
+        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        n = con.execute("SELECT COUNT(*) FROM items WHERE itemTypeID NOT IN (1,14)").fetchone()[0]
+        con.close()
+        return n
+    except Exception:  # noqa: BLE001
+        return -2
 
 
 def parse_bib(path: Path) -> list[tuple[str, str]]:
@@ -82,7 +100,8 @@ def main() -> int:
 
     # status
     bbt = _bbt_installed()
-    print(f"Zotero 数据目录: {ZOTERO_DIR}  {'✓' if ZOTERO_DIR.exists() else '✗（首次启动 Zotero 后生成）'}")
+    items = _library_count()
+    print(f"Zotero 数据目录: {ZOTERO_DATA}  {'✓' if ZOTERO_DATA.exists() else '✗'}  | 库条目: {items}")
     print(f"Better BibTeX 插件: {bbt or '✗ 未安装（见 anote zotero setup）'}")
     print(f"refs.bib: {refs}  {'✓' if refs.exists() else '✗（待 Better BibTeX 导出）'}")
     if refs.exists():

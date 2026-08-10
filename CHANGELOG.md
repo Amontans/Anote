@@ -11,6 +11,8 @@
 - `anote check` 新增第 7 项：引用链路校验
 - `anote stats` 新增「引用条目」；MCP 新增 `anote_bib` 工具（6 工具）
 - 单测 11 项全绿（含 TestBibService）
+- 全链路沙盒验证：bibcheck ✓ → latexmk 编译 → PDF 渲染引用 ✓；BIBINPUTS 方案固化进根 latexmkrc
+- `anote zotero status` 直读 Zotero 库条目数（~Zotero/zotero.sqlite 只读）+ BBT 检测
 
 ## [1.2.0] - 2026-08-09（插件 + MCP + 现代化完善）
 
