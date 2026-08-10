@@ -128,7 +128,7 @@ git -C ~/Documents/Anote remote add origin <gitee> && anote backup
 
 - 已完成：P0-P3（配置层/TUI 框架/数据页/迁移向导/引导/统计）；统一入口；语义检索；教科书层；测试；全文档
 - **v1.1 完成**：AI 问答经 Pi（Ctrl+A / anote ask-pi）、反链（anote backlinks）、回顾自动化（weekly-review.sh 草稿+提交）、语义索引自动增量（pre-commit）
-- **v1.3 进行中（Zotero 闭环）**：Better BibTeX xpi 已下载待装（~/Downloads/）；anote zotero/bibcheck 已实现；用户需 GUI 装插件+配置 refs.bib 自动导出
+- **v1.3 anote 侧完成**：anote zotero{status|bib|setup} + bibcheck + BibService（DRY）+ check 第7项 + stats 引用条目 + MCP anote_bib（6 工具）。**待用户 GUI**：装 Better BibTeX（~/Downloads/zotero-better-bibtex-9.0.55.xpi）→ 导出 refs.bib
 - **现代化完善**：cli.run 统一守卫（单行错误）、模块契约声明（15 脚本）、配置单点（core.Config shim）、单测 11 项；规范 docs/CODING.md
 - 下一步优先级：v1.1 AI 问答面板 → v0.9 完成 → v1.2 插件/MCP
 - 未闭环：数据仓库 gitee 远程未配置（`anote backup` 只提交不推送）

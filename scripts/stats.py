@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from anote.core import Config  # noqa: E402
-from anote.services import StatsService  # noqa: E402
+from anote.services import BibService, StatsService  # noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from anote import cli as _cli  # noqa: E402
@@ -16,7 +16,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
-    stats = StatsService(Config.load().data_dir).compute()
+    data = Config.load().data_dir
+    stats = StatsService(data).compute()
+    stats["引用条目"] = len(BibService(data).keys())
     if a.json:
         print(json.dumps(stats, ensure_ascii=False, indent=2))
         return
@@ -30,6 +32,7 @@ def main() -> None:
     print(f"  📥 队列         " + " ".join(f"{k}{q.get(k, 0)}" for k in ("📥", "📖", "✅", "🗄")))
     print(f"  🗂️ PDF 附件     {stats['PDF 附件']}")
     print(f"  📦 编译产物 PDF {stats['编译产物 PDF']}")
+    print(f"  📚 引用条目     {stats['引用条目']}")
 
 
 if __name__ == "__main__":

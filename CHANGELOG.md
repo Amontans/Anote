@@ -7,6 +7,10 @@
 - `anote zotero {status|bib|setup}`：状态/refs.bib 统计/接入指引
 - `anote bibcheck`：引用链路校验（笔记 cite ↔ refs.bib 一致性，缺失键/冗余条目）
 - ROADMAP 自审：规划欠缺分析（备份恢复/检索质量/写作输出/AI 降级/META 自动补全/CI/访问控制/归档/帮助分层）
+- **BibService 进 services**（bibcheck/check/stats/MCP 共用，DRY；跳过 LaTeX 注释）
+- `anote check` 新增第 7 项：引用链路校验
+- `anote stats` 新增「引用条目」；MCP 新增 `anote_bib` 工具（6 工具）
+- 单测 11 项全绿（含 TestBibService）
 
 ## [1.2.0] - 2026-08-09（插件 + MCP + 现代化完善）
 

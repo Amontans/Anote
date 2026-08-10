@@ -17,6 +17,8 @@ import re
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from anote_config import data_dir as _cfg_data_dir
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+from anote.services import BibService as _Bib
 DEFAULT_NOTES = _cfg_data_dir()
 WARN = []
 
@@ -113,6 +115,20 @@ def check_6_meta(notes):
     else:
         print("[6] ✓ 笔记均有 META 元数据")
 
+
+
+def check_7_bib(notes):
+    """引用链路：refs.bib 存在性 + 缺失引用键。"""
+    bib = _Bib(notes)
+    if not bib.refs.exists():
+        WARN.append(f"[7] refs.bib 不存在（安装 Better BibTeX 后导出，见 anote zotero setup）")
+        return
+    missing = bib.missing()
+    if missing:
+        WARN.append(f"[7] 笔记引用了 {len(missing)} 个不在 refs.bib 的键: {missing[:8]}")
+    else:
+        print(f"[7] ✓ 引用链路正常（{len(bib.keys())} 条目）")
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--notes", default=DEFAULT_NOTES)
@@ -125,6 +141,7 @@ def main():
     check_4_memory_freshness(notes)
     check_5_projects(notes)
     check_6_meta(notes)
+    check_7_bib(notes)
     print("\n=== 结果 ===")
     if WARN:
         for w in WARN:

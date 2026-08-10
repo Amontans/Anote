@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from anote.core import Config  # noqa: E402
-from anote.services import NotesService, QueueService, StatsService  # noqa: E402
+from anote.services import BibService, NotesService, QueueService, StatsService  # noqa: E402
 
 from fastmcp import FastMCP  # noqa: E402
 
@@ -77,5 +77,18 @@ def anote_notes(filter: str = "") -> str:
     return "\n".join(f"{n.rel}  [{', '.join(n.meta.values())}]" for n in notes[:100])
 
 
+
+@mcp.tool()
+def anote_bib() -> str:
+    """引用库状态：refs.bib 条目数 + 缺失引用键 + 冗余条目。"""
+    bib = BibService(DATA)
+    return json.dumps({
+        "entries": len(bib.keys()),
+        "cited": len(bib.cited_keys()),
+        "missing": bib.missing(),
+        "unused": bib.unused()[:20],
+    }, ensure_ascii=False, indent=2)
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")
+

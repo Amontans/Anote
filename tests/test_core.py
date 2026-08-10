@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from anote.core import Config, Result  # noqa: E402
-from anote.services import NotesService, QueueService, StatsService  # noqa: E402
+from anote.services import BibService, NotesService, QueueService, StatsService  # noqa: E402
 
 
 class TestConfig(unittest.TestCase):
@@ -108,6 +108,30 @@ class TestStatsService(unittest.TestCase):
             self.assertEqual(st["教科书"], 1)
             self.assertEqual(st["章节"], 1)
             self.assertEqual(st["回顾草稿"], 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class TestBibService(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self._tmp.name)
+        (self.dir / "src/数学").mkdir(parents=True)
+        (self.dir / "src/数学/a.tex").write_text(
+            "% ==META== 学科: 数学 | 日期: 2026-08-09\n\\section{x}\n\\cite{keyA}\n% \\cite{commented}\n", encoding="utf-8")
+        (self.dir / "refs.bib").write_text("@article{keyA, title={A}}\n@article{unused, title={U}}\n", encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_bib(self):
+        bib = BibService(self.dir)
+        self.assertEqual(bib.keys(), {"keyA", "unused"})
+        self.assertEqual(bib.cited_keys(), {"keyA"})  # 注释的 commented 不算
+        self.assertEqual(bib.missing(), [])
+        self.assertEqual(bib.unused(), ["unused"])
 
 
 if __name__ == "__main__":
