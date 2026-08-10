@@ -68,6 +68,61 @@
 - 每个功能必须配套：文档（INTERFACES/ROADMAP 更新）+ 测试 + CHANGELOG
 
 
+## 规划版本（扩充 v1.3 → v2.0）
+
+### v1.3「Zotero 文献闭环」← 下一步（Zotero 已装）
+| 功能 | 说明 | 价值 |
+|------|------|:---:|
+| Better BibTeX 接入 | 安装插件 + 自动导出 `refs.bib`（写 `anote bibcheck` 校验新鲜度） | 高 |
+| `anote zotero` 命令 | 读 Zotero 库（本地 sqlite 只读/API）→ 生成待读队列、统计并入 stats | 高 |
+| 检索直入 Zotero | `anote search` 结果一键写入 Zotero 库（经本地接口） | 高 |
+| PDF 自动入库 | `fetch_paper` 下载后挂到 Zotero 条目（附件） | 中 |
+| 引用链路验证 | 笔记 `\cite{}` → refs.bib → latexmk 编译闭环测试 | 高 |
+
+### v1.4「知识编译层」（LLM Wiki 范式落地）
+| 功能 | 说明 |
+|------|------|
+| `wiki.py` 主题页编译 | 按学科/分支把 src/ 笔记自动编译成 L1 主题页（经 Pi 代理生成，你确认） |
+| 三层知识体系 | L1 wiki 主题页 + L2 concepts + L3 insights 联动更新 |
+| 图谱数据源 | META 标签/反链 → 关系数据（为 v1.6 图谱供数） |
+
+### v1.5「多端与协作」
+| 功能 | 说明 |
+|------|------|
+| Web 只读外壳 | 局域网浏览器访问 src/memory + 搜索（只读，薄服务） |
+| 移动端阅读 | Syncthing 同步 PDF → KOReader 配置脚本 |
+| 自动备份 | systemd 定时：每日 commit + 每周 push（防遗忘） |
+| 协作导出 | `anote export`：整库打包（含 README/HANDOFF）便于分享 |
+
+### v1.6「体验与图谱」
+| 功能 | 说明 |
+|------|------|
+| 知识图谱视图 | META 标签/反链关系可视化（TUI 或 Web） |
+| 主题系统 | Textual 主题切换 + 自定义 CSS |
+| i18n | 英文 UI 完整化 |
+| 周报自动生成 | 周回顾 → markdown 周报（可发邮件/存档） |
+
+### v1.7「性能与规模」
+| 功能 | 说明 |
+|------|------|
+| 大库语义索引 | 分块嵌入/并行化；万级笔记可用 |
+| 搜索分页 | TUI 搜索结果分页加载 |
+| 启动加速 | TUI 懒加载屏幕；索引缓存 |
+
+### v2.0「发布与生态」
+| 功能 | 说明 |
+|------|------|
+| 开源发布 | 示例数据/CI 测试门禁/发布说明；MIT 已是 |
+| 插件模板 | `anote plugin new <名>` 生成插件骨架（含契约/测试） |
+| MCP 增强 | 更多工具（zotero/daily/migrate/backlinks） |
+| Pi 深度集成 | 打包 anote-pi-skill（Pi 直接 `anote` 全流程） |
+
+### 持续优化（每版伴随）
+- 错误体验收敛（cli.run 已统一，逐步审计各命令错误路径）
+- 性能基准（大库 benchmark 脚本）
+- 数据安全（迁移回滚演练、异机冷备脚本）
+- 日志分析（`anote log` 查看/归档）
+
 ## 长期发展方向（项目愿景）
 
 ### 短期（v1.3 → v1.4）
