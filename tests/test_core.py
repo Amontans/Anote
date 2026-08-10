@@ -154,3 +154,27 @@ class TestWikiGroup(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRetrieval(unittest.TestCase):
+    def test_bm25_ranks(self):
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+        from anote.services.retrieval import BM25Index, tokenize
+        chunks = [
+            {"text": "环是带有两个二元运算的集合，加法构成交换群"},
+            {"text": "群是集合配合二元运算，满足封闭性结合律单位元逆元"},
+            {"text": "Transformer 用自注意力代替循环结构"},
+        ]
+        idx = BM25Index(chunks)
+        scores = idx.score("环 二元运算")
+        self.assertEqual(max(range(3), key=lambda i: scores[i]), 0)
+        self.assertEqual(tokenize("环论"), ["环论"])
+
+    def test_tokenize(self):
+        from anote.services.retrieval import tokenize
+        self.assertIn("attention", tokenize("Attention is all you need"))
+        self.assertTrue(any("环" in t for t in tokenize("环论基础")))
+
+
+if __name__ == "__main__":
+    unittest.main()

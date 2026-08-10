@@ -42,6 +42,7 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote release <maj\|min\|patch> 发布门禁（测试+版本+tag）
   anote report                  周报自动生成
   anote backup-create [--encrypt] 加密/校验备份（P0）
+  anote eval [--k N]             检索质量评测
   anote restore <文件> [--dry-run] 备份恢复/演练
   anote archive <年份> [--dry]    年度归档
   anote graph [--mermaid]       知识图谱（标签/反链）
@@ -125,6 +126,9 @@ case "$cmd" in
     "$PYV" "$SKILL/web_server.py" "$@" ;;
   export)
     python3 "$SKILL/export.py" "$@" ;;
+  eval)
+    # anote eval [--k N] —— 检索质量评测
+    "$PYV" "$SKILL/eval_retrieval.py" "$@" ;;
   backup-create)
     python3 "$SKILL/backup.py" "$@" ;;
   restore)

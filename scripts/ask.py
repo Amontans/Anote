@@ -84,15 +84,22 @@ def main() -> int:
     root = str(Config.load().data_dir)
 
     if semantic:
-        hits = SemanticService(Config.load().data_dir).search(query, top)
-        if not hits:
+        from anote.services.retrieval import RetrievalService
+        bm25_only = "--bm25" in args
+        svc = RetrievalService(Config.load().data_dir)
+        if not svc.sem.has_index():
             print("尚未建语义索引：先运行 anote index-semantic")
             return 1
-        print(f"语义检索: {query}   范围: {root}\n")
-        for i, (chunk, score) in enumerate(hits, 1):
-            print(f"{i}. [{score:.3f}] {os.path.relpath(chunk['path'], root)}")
+        hits = svc.retrieve(query, top, hybrid=not bm25_only)
+        if not hits:
+            print("无结果")
+            return 1
+        label = "BM25 词法检索" if bm25_only else "混合检索（向量+BM25+重排）"
+        print(f"{label}: {query}   范围: {root}\n")
+        for i, (chunk, score, src) in enumerate(hits, 1):
+            print(f"{i}. [{score:.3f} {src}] {os.path.relpath(chunk['path'], root)}")
             print(f"   {chunk['text'][:200]}")
-        print("\n（片段为语义最相关内容）")
+        print("\n（片段为最相关内容）")
         return 0
 
     patterns = extract_keywords(query) if smart else ([query], [])
