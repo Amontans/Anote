@@ -32,7 +32,8 @@
 ## 文件职责约定
 
 - `scripts/`：CLI 适配器（薄，≈50-150 行）；新命令先问"逻辑放 services 还是脚本"
-- `src/anote/services.py`：领域服务（队列/笔记/统计）；新增领域（如 BookService）新建模块
+- `src/anote/services/`：领域服务包（一领域一模块）：queue/notes/stats/bib/health/wiki/graph/meta/review/semantic
+- 新增领域 → `services/<领域>.py` + `__init__.py` 一行导出；脚本只留 参数解析+输出
 - `src/anote/core.py`：横切关注点（配置/结果/日志/路径安全）
 - `tui/screens/`：一屏一文件；数据访问仅经 `self.app.context`
 - `templates/`：TEX 模板（占位符 `%%XXX%%`）
@@ -54,3 +55,11 @@
 - mypy 类型检查（包内类型已就绪）
 - 更多服务拆分（BookService/ReviewService/MemoryService）
 - 插件机制（v1.2：scripts/ 注册表）
+
+
+## 简洁化检查清单（代码评审用）
+- [ ] 脚本 ≤150 行且无业务逻辑（解析/计算在 services）
+- [ ] 无重复解析（同一格式只一个 Service 拥有）
+- [ ] 无死代码/未用 import；类型注解完整
+- [ ] 数据访问经 Service 或 context，不散落
+- [ ] 错误走 Result + cli.run（不裸 print traceback）

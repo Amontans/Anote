@@ -9,6 +9,7 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts"))
 import anote_config as cfg  # noqa: E402
@@ -16,6 +17,7 @@ import anote_config as cfg  # noqa: E402
 from textual.message import Message  # noqa: E402
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from anote.services import NotesService, QueueService  # noqa: E402
 
 
 class ConfigChanged(Message):
@@ -119,19 +121,12 @@ class AnoteContext:
         with open(os.path.join(self.data_dir, rel), "w", encoding="utf-8") as f:
             f.write(content)
 
-    # ---- 状态查询（Home 仪表盘用）----
+    # ---- 状态查询（Home 仪表盘用；经 services，不重复解析）----
     def note_count(self):
-        n = 0
-        for root, _, files in os.walk(os.path.join(self.data_dir, "src")):
-            n += sum(1 for f in files if f.endswith((".tex", ".md")))
-        return n
+        return len(NotesService(Path(self.data_dir)).scan())
 
     def queue_counts(self):
-        try:
-            q = self.read_data("queue.md")
-        except Exception:  # noqa: BLE001
-            return {"📥": 0, "📖": 0, "✅": 0, "🗄": 0}
-        return {k: q.count(k) for k in ("📥", "📖", "✅", "🗄")}
+        return QueueService(Path(self.data_dir)).counts()
 
     def semantic_ready(self):
         return os.path.isdir(os.path.join(self.data_dir, ".semantic"))

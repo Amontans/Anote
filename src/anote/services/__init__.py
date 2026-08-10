@@ -7,7 +7,8 @@ from .queue import QueueEntry, QueueService
 from .notes import Note, NotesService
 from .stats import StatsService
 from .bib import BibService
-from . import queue, notes, stats, bib
+from .health import HealthService
+from . import queue, notes, stats, bib, health
 
 __all__ = ["QueueEntry", "QueueService", "Note", "NotesService",
-           "StatsService", "BibService", "queue", "notes", "stats", "bib"]
+           "StatsService", "BibService", "HealthService", "queue", "notes", "stats", "bib", "health"]

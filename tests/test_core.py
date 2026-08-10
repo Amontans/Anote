@@ -140,8 +140,7 @@ if __name__ == "__main__":
 
 class TestWikiGroup(unittest.TestCase):
     def test_group(self):
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
-        from wiki import group_notes
+        from anote.services.wiki import group_notes
         from anote.services import Note
         notes = [
             Note(Path("/x"), "src/数学/代数/环论.tex", "环论", {"学科": "数学", "分支": "代数"}),

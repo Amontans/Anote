@@ -1,5 +1,14 @@
 # 变更日志（CHANGELOG）
 
+## [1.6.1] - 2026-08-10（模块化/简洁化到优秀）
+
+### 重构
+- **services 包补全**：health（7 项自检）/ wiki / graph / meta / review / semantic 六领域迁入 services/，对应脚本变薄适配器
+- **语义检索共享**：chunk_text/建索引/检索 → SemanticService（embed.py 与 ask.py 共用，消除重复）
+- **TUI 去重**：context.queue_counts/note_count 改用 QueueService/NotesService（不再内联解析）
+- **修复**：ask --smart 停用词原为字符集（误删"论"等字）→ 显式词表；ask 参数顺序兼容（--semantic 可前置）；health [2] 队列正则适配 MD 格式
+- **简洁化清单**：CODING.md 新增 5 条代码评审检查项
+
 ## [1.6.0] - 2026-08-10（体验与图谱 + 模块化）
 
 ### 新增
