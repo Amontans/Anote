@@ -38,6 +38,9 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote wiki [--dry] [--force] 知识编译：笔记 → 学科主题页
   anote plugin {list\|add\|run}   插件机制
   anote mcp                    MCP Server（外部 AI 工具接入）
+  anote test                    一键测试门禁（单测+TUI+自检）
+  anote web [--port N]          只读浏览外壳（仅 127.0.0.1）
+  anote export [--out 路径]     整库打包（可移植/分享）
   anote zotero {status\|bib\|setup}  Zotero 文献接入
   anote bibcheck                引用链路校验（cite↔refs.bib）
   anote index                   重建分层索引
@@ -104,6 +107,14 @@ case "$cmd" in
     python3 "$SKILL/zotero.py" "$@" ;;
   bibcheck)
     python3 "$SKILL/bibcheck.py" ;;
+  web)
+    # anote web [--port N] [--token xxx] —— 只读浏览外壳
+    "$PYV" "$SKILL/web_server.py" "$@" ;;
+  export)
+    python3 "$SKILL/export.py" "$@" ;;
+  test)
+    # anote test —— 一键测试门禁
+    bash "$PROJ/scripts/run-tests.sh" ;;
   mcp)
     # anote mcp —— MCP Server（stdio，供外部 AI 工具调用）
     "$PYV" "$SKILL/mcp_server.py" ;;

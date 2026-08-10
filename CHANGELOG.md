@@ -1,5 +1,14 @@
 # 变更日志（CHANGELOG）
 
+## [1.5.0] - 2026-08-10（多端协作 + CI 门禁）
+
+### 新增
+- **`anote test` 一键测试门禁**（单测+TUI 冒烟+TUI 动作+check；pre-push 钩子阻塞失败推送）
+- **每日自动备份定时器**（notes-backup.timer 23:00，commit+push）
+- **`anote web`**：只读浏览外壳（仅 127.0.0.1，可选 --token，全文搜索）
+- **`anote export`**：整库打包（排除 .venv/.semantic/.git，可移植）
+- **流程科学性**：ROADMAP 新增 DoD/依赖图/风险登记/优先级/验证节奏
+
 ## [1.4.0] - 2026-08-10（知识编译 + 数据质量）
 
 ### 新增

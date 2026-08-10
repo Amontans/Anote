@@ -1,0 +1,7 @@
+[Unit]
+Description=每日 23:00 自动备份
+[Timer]
+OnCalendar=*-*-* 23:00
+Persistent=true
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,5 @@
+[Unit]
+Description=Anote 每日自动备份（提交+推送）
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/Amontans/Projects/Anote/scripts/daily-backup.sh
