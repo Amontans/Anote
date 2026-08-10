@@ -27,7 +27,7 @@
 | 版本 | 内容 |
 |------|------|
 | **v1.7 性能规模** | 大库语义索引分块/并行嵌入；`anote ask` 结果分页；TUI 懒加载加速；基准脚本 benchmark.py |
-| **v1.8 备份恢复 + 归档（P0）** | `anote backup-create`（加密 tar.gz + 校验和）；`anote restore --dry-run` 恢复演练；异地副本指引；`anote archive <年份>` 年度归档/冻结 |
+| **v1.8 备份恢复 + 归档（P0）** | `anote backup-create [--encrypt]`（tar.gz+sha256/openssl 加密）；`anote restore [--dry-run/--force]` 校验+演练+还原；`anote archive <年份>` 归档冻结（自动排除检索）；每日定时器周日自动加密冷备 | ✅ 完成 |
 
 ### 阶段四 · 检索与输出
 | 版本 | 内容 |

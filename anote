@@ -41,6 +41,9 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote test                    一键测试门禁（单测+TUI+自检）
   anote release <maj\|min\|patch> 发布门禁（测试+版本+tag）
   anote report                  周报自动生成
+  anote backup-create [--encrypt] 加密/校验备份（P0）
+  anote restore <文件> [--dry-run] 备份恢复/演练
+  anote archive <年份> [--dry]    年度归档
   anote graph [--mermaid]       知识图谱（标签/反链）
   anote web [--port N]          只读浏览外壳（仅 127.0.0.1）
   anote export [--out 路径]     整库打包（可移植/分享）
@@ -122,6 +125,12 @@ case "$cmd" in
     "$PYV" "$SKILL/web_server.py" "$@" ;;
   export)
     python3 "$SKILL/export.py" "$@" ;;
+  backup-create)
+    python3 "$SKILL/backup.py" "$@" ;;
+  restore)
+    python3 "$SKILL/restore.py" "$@" ;;
+  archive)
+    python3 "$SKILL/archive.py" "$@" ;;
   report)
     python3 "$SKILL/report.py" "$@" ;;
   graph)

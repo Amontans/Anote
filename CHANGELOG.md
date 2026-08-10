@@ -1,5 +1,17 @@
 # 变更日志（CHANGELOG）
 
+## [1.7.0] - 2026-08-10（模块化收官 + P0 备份恢复）
+
+### 重构（简洁化到优秀）
+- **services 包 15 领域**：新增 literature/migration/index/zotero/papers；search/migrate/index-gen/zotero/fetch_paper 五脚本变薄适配器
+- 全部脚本 ≤150 行、无业务逻辑；领域逻辑统一在 services
+
+### 新增（v1.8 P0 备份恢复）
+- **`anote backup-create [--encrypt]`**：tar.gz + SHA256 校验（openssl AES-256 可选加密，ANOTE_BACKUP_KEY）
+- **`anote restore <文件> [--dry-run/--force]`**：校验和验证 + 演练预览 + 还原（剥离顶层目录）
+- **`anote archive <年份>`**：旧笔记归档到 src/_archive/（自动排除在检索外）
+- 每日备份定时器：周日自动加密冷备（设 ANOTE_BACKUP_KEY 后启用）
+
 ## [1.6.1] - 2026-08-10（模块化/简洁化到优秀）
 
 ### 重构
