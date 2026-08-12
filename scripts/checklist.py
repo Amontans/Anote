@@ -40,4 +40,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(__import__("anote.cli", fromlist=["run"]).run(main))
+    sys.exit(main())
