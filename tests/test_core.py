@@ -205,3 +205,21 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestEbook(unittest.TestCase):
+    def test_extract_epub(self):
+        import io, zipfile as zf
+        import tempfile
+        from anote.services.ebooks import extract_epub
+        with tempfile.TemporaryDirectory() as t:
+            p = Path(t) / "test.epub"
+            with zf.ZipFile(p, "w") as z:
+                z.writestr("content/ch1.xhtml", "<html><body><h1>第一章</h1><p>环论基础内容。</p></body></html>")
+            text = extract_epub(p)
+            self.assertIn("第一章", text)
+            self.assertIn("环论", text)
+
+
+if __name__ == "__main__":
+    unittest.main()

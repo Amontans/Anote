@@ -36,9 +36,11 @@ def extract_keywords(question: str) -> tuple[list, list]:
 
 def rg(pattern: str, root: str) -> list[str]:
     try:
-        r = subprocess.run(["rg", "-l", "-i", pattern, root,
-                            "-g", "*.tex", "-g", "*.md", "-g", "!00-index.tex", "-g", "!README.md"],
-                           capture_output=True, text=True, timeout=30)
+        r = subprocess.run(["rg", "--no-ignore", "-l", "-i", pattern, ".",
+                            "-g", "!.venv/**", "-g", "!.semantic/**", "-g", "!.git/**",
+                            "-g", "*.tex", "-g", "*.md", "-g", "*.txt",
+                            "-g", "!00-index.tex", "-g", "!README.md"],
+                           capture_output=True, text=True, timeout=30, cwd=root)
         return [l for l in r.stdout.splitlines() if l.strip()]
     except Exception:  # noqa: BLE001
         return []

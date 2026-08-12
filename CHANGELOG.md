@@ -1,5 +1,17 @@
 # 变更日志（CHANGELOG）
 
+## [1.9.1] - 2026-08-10（文档阅读补全）
+
+### 新增（填补 PDF/MOBI 处理缺口）
+- **`anote read <路径>`**：统一阅读入口（PDF→zathura/okular；epub→foliate 若有；自动选阅读器，config 可设 reader）
+- **`anote ebook [list|extract]`**：电子书目录 + epub 文本提取（stdlib zipfile+HTML 解析，零依赖）；mobi 提示装 calibre
+- **`anote index-pdf`**：批量提取 pdfs/*.pdf → .txt（**PDF 内容可被 `anote ask` 检索**）
+- services/ebooks.py（extract_epub/extract_pdf_text/pick_reader）
+- 单测 16 项全绿（新增 TestEbook）
+
+### 修复
+- ripgrep 绝对根目录下 `pdfs/*.txt` glob 失效 + .gitignore 跳过 pdfs → ask 改为 cwd=数据目录+--no-ignore（PDF 文本可检索）
+
 ## [1.9.0] - 2026-08-10（v1.10 写作输出）
 
 ### 新增
