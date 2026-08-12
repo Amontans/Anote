@@ -51,8 +51,12 @@ def pick_reader(path: Path, reader: str = "") -> str:
         for r in ("zathura", "okular", "evince"):
             if shutil.which(r):
                 return r
-    if ext in (".epub", ".mobi", ".azw3"):
+    if ext == ".epub":
         for r in ("foliate", "calibre", "ebook-viewer"):
+            if shutil.which(r):
+                return r
+    if ext in (".mobi", ".azw3"):
+        for r in ("ebook-viewer", "calibre", "foliate"):
             if shutil.which(r):
                 return r
     for r in ("code", "vim", "nvim"):

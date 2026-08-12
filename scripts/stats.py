@@ -8,6 +8,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from anote.core import Config  # noqa: E402
 from anote.services import BibService, StatsService  # noqa: E402
+from anote.services.docs import DocService  # noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from anote import cli as _cli  # noqa: E402
@@ -19,6 +20,9 @@ def main() -> None:
     data = Config.load().data_dir
     stats = StatsService(data).compute()
     stats["引用条目"] = len(BibService(data).keys())
+    docs = DocService(data).stats()
+    stats["文档"] = docs["total"]
+    stats["在读"] = docs["status"].get("📖", 0)
     if a.json:
         print(json.dumps(stats, ensure_ascii=False, indent=2))
         return
@@ -33,6 +37,7 @@ def main() -> None:
     print(f"  🗂️ PDF 附件     {stats['PDF 附件']}")
     print(f"  📦 编译产物 PDF {stats['编译产物 PDF']}")
     print(f"  📚 引用条目     {stats['引用条目']}")
+    print(f"  📄 文档管理     {stats['文档']}（在读 {stats['在读']}）")
 
 
 if __name__ == "__main__":

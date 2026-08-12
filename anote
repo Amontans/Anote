@@ -44,7 +44,8 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote backup-create [--encrypt] 加密/校验备份（P0）
   anote eval [--k N]             检索质量评测
   anote paper <主题> [--type]   论文/综述/开题骨架（素材聚合+经Pi）
-  anote read <路径>             统一阅读（PDF/epub 自动选阅读器）
+  anote read <路径>             统一阅读（读即登记/进度提示）
+  anote docs {list\|add\|update\|progress\|stats\|import}  文档管理（专业图书级）
   anote ebook [list\|extract]   电子书管理/提取文本
   anote index-pdf               批量提取 PDF 文本（可检索）
   anote checklist               投稿前检查清单
@@ -131,6 +132,9 @@ case "$cmd" in
     "$PYV" "$SKILL/web_server.py" "$@" ;;
   export)
     python3 "$SKILL/export.py" "$@" ;;
+  docs)
+    # anote docs {list|add|update|progress|stats|import}
+    python3 "$SKILL/docs.py" "$@" ;;
   read)
     # anote read <路径> —— 统一阅读入口
     python3 "$SKILL/read.py" "$@" ;;

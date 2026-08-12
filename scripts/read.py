@@ -26,9 +26,16 @@ def main() -> int:
     if not p.exists():
         print(f"✗ 不存在: {p}")
         return 1
+    from anote.services.docs import DocService
+    svc = DocService(data)
+    rel = str(p.relative_to(data))
+    svc.mark_read(rel)  # 读即登记：自动加/📥→📖/记录最后阅读
+    e = svc.find(rel)
     reader = pick_reader(p, Config.load().config.get("reader", ""))
     subprocess.Popen([reader, str(p)], start_new_session=True)
-    print(f"✓ 用 {reader} 打开: {p}")
+    hint = f"（上次进度 {e.progress}）" if e and e.progress != "0%" else ""
+    print(f"✓ 用 {reader} 打开: {p} {hint}")
+    print(f"  读后更新进度: anote docs progress {rel} 50%")
     return 0
 
 

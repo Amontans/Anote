@@ -111,7 +111,15 @@ notes {index | index-semantic [--full] | check | review [--days N] | ask [--smar
 
 ---
 
-## 8. 升级接口（向后兼容策略）
+## 8. 文档登记契约（docs/registry.md）
+
+表格列：`状态 | 类型 | 文件 | 标题 | 作者 | 年份 | 标签 | 笔记 | 进度 | 最后阅读 | 哈希`
+- 状态机：📥待读 → 📖在读 → ✅读完 → 🗄归档（与 queue.md 对齐）
+- 文件 = 相对数据目录路径；哈希 = sha256 前 8 位（去重键）
+- 派生产物（pdfs/*.txt）不登记、不被 check 标记
+- 维护：`anote docs {list|add|update|progress|stats|import}`；`anote read` 读即登记
+
+## 9. 升级接口（向后兼容策略）
 
 - **数据格式冻结层**：`src/`、`memory/`、`queue.md` 的格式 = v1 契约，**永不破坏性变更**；新增字段必须可选项
 - **派生物可重建**：`.semantic/`、`00-index.tex`、`reviews/` 变更 schema 时自动重建，无需迁移

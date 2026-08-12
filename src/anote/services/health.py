@@ -27,6 +27,7 @@ class HealthService:
         results.append(self.check_projects())
         results.append(self.check_meta())
         results.append(self.check_bib())
+        results.append(self.check_docs())
         return results
 
     # ---- 1. 未登记索引 ----
@@ -108,6 +109,25 @@ class HealthService:
         return True, "[6] ✓ 笔记均有 META 元数据"
 
     # ---- 7. 引用链路 ----
+    def check_docs(self) -> tuple[bool, str]:
+        """文档登记一致性：pdfs/ebooks 有文件未登记；登记条目文件缺失。"""
+        from .docs import DocService
+        svc = DocService(self.data)
+        entries = svc.load()
+        reg_paths = {e.path for e in entries}
+        missing = [e.path for e in entries if not (self.data / e.path).exists()]
+        unreg = []
+        for d in ("pdfs", "ebooks"):
+            dd = self.data / d
+            if dd.is_dir():
+                for p in sorted(dd.rglob("*")):
+                    if p.is_file() and p.suffix.lower() in (".pdf", ".epub", ".mobi", ".azw3") \
+                            and not p.name.startswith(".") and str(p.relative_to(self.data)) not in reg_paths:
+                        unreg.append(str(p.relative_to(self.data)))
+        if missing or unreg:
+            return False, f"[8] 文档登记不一致: 缺失 {len(missing)} 个, 未登记 {len(unreg)} 个"
+        return True, f"[8] ✓ 文档登记一致（{len(entries)} 条）"
+
     def check_bib(self) -> tuple[bool, str]:
         bib = BibService(self.data)
         if not bib.refs.exists():

@@ -1,5 +1,14 @@
 # 变更日志（CHANGELOG）
 
+## [1.10.0] - 2026-08-10（专业级阅读与管理 M1-M3）
+
+### 新增
+- **`anote docs` 文档管理**（专业图书级）：docs/registry.md 契约登记表（状态/类型/文件/标题/作者/年份/标签/笔记/进度/最后阅读/哈希）
+  - `docs list`（--status/--tag/--type/--sort 过滤排序）、`docs add`（sha256 去重）、`docs update`、`docs progress`、`docs stats`（未读占比）、`docs import`（批量扫描 pdfs/ebooks + 提取文本）
+- **`anote read` 读即登记**：打开自动登记/📥→📖/记录最后阅读/提示上次进度；路由：pdf→zathura、epub→foliate、mobi→calibre（foliate/calibre 已安装）
+- **check 第 8 项**：文档登记一致性；**stats 并入**文档/在读统计
+- services/docs.py（DocService 全逻辑）；单测 17 项全绿（新增 TestDocs）
+
 ## [1.9.1] - 2026-08-10（文档阅读补全）
 
 ### 新增（填补 PDF/MOBI 处理缺口）

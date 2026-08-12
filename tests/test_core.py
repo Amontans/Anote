@@ -223,3 +223,37 @@ class TestEbook(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDocs(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        self._tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self._tmp.name)
+        (self.dir / "pdfs").mkdir()
+        (self.dir / "pdfs/测试.pdf").write_bytes(b"%PDF-1.4 test" + b"\x00" * 100)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_add_dedup_update_stats(self):
+        from anote.services.docs import DocService
+        svc = DocService(self.dir)
+        ok, _ = svc.add("pdfs/测试.pdf")
+        self.assertTrue(ok)
+        # 去重：同文件再 add 应失败
+        ok2, msg = svc.add("pdfs/测试.pdf")
+        self.assertFalse(ok2)
+        # 状态流转
+        svc.mark_read("pdfs/测试.pdf")
+        svc.progress("pdfs/测试.pdf", "50%")
+        e = svc.find("pdfs/测试.pdf")
+        self.assertEqual(e.status, "📖")
+        self.assertEqual(e.progress, "50%")
+        st = svc.stats()
+        self.assertEqual(st["total"], 1)
+        self.assertEqual(st["status"]["📖"], 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
