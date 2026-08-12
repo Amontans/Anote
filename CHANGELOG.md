@@ -1,5 +1,12 @@
 # 变更日志（CHANGELOG）
 
+## [1.9.0] - 2026-08-10（v1.10 写作输出）
+
+### 新增
+- **`anote paper <主题> [--type 论文|综述|开题] [--no-ai] [--dry]`**：素材聚合（BM25/向量检索+refs.bib 引用+wiki 主题页）→ 经 Pi 生成 LaTeX 骨架 → projects/<主题>/{paper.tex, materials.md}；无 fastembed 时 BM25 兜底
+- **`anote checklist`**：投稿前检查清单（内容/引用/工程/复现性）
+- 单测 15 项全绿（新增 TestPaper）
+
 ## [1.8.0] - 2026-08-10（v1.9 检索质量）
 
 ### 新增

@@ -178,3 +178,21 @@ class TestRetrieval(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPaper(unittest.TestCase):
+    def test_collect_materials_bm25(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as t:
+            d = Path(t)
+            (d / "src/数学/代数").mkdir(parents=True)
+            (d / "src/数学/代数/环论.tex").write_text(
+                "% ==META== 学科: 数学 | 分支: 代数 | 标签: 环 | 日期: 2026-08-10\n"
+                "\\section{环}\n环是带有两个二元运算的集合。\n", encoding="utf-8")
+            from anote.services.paper import collect_materials
+            m = collect_materials("环", d, top=3)
+            self.assertTrue(any("环论.tex" in n for n in m["notes"]))
+
+
+if __name__ == "__main__":
+    unittest.main()
