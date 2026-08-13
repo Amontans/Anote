@@ -78,10 +78,41 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
 EOF
 }
 
+# ===== 别名解析（说人话/记不住英文也能用）=====
+case "$1" in
+  问|提问|搜|检索|查询) set -- ask "${@:2}" ;;
+  读|看|阅读) set -- read "${@:2}" ;;
+  记|新建|写笔记|笔记) set -- new "${@:2}" ;;
+  写|写论文|作文) set -- paper "${@:2}" ;;
+  书|写书) set -- book "${@:2}" ;;
+  文献|文档|资料) set -- docs "${@:2}" ;;
+  查|检查|体检) set -- check "${@:2}" ;;
+  统计|概览) set -- stats "${@:2}" ;;
+  存|保存|提交) set -- commit "${@:2}" ;;
+  备份|存档) set -- backup "${@:2}" ;;
+  回顾|总结) set -- review "${@:2}" ;;
+  转换|转) set -- convert "${@:2}" ;;
+  读论文|下载论文) set -- paper-read "${@:2}" ;;
+  帮助|教程) set -- help "${@:2}" ;;
+esac
 cmd="$1"; shift || true
 
 case "$cmd" in
-  ""|help|-h|--help)
+  "")
+    cat <<'MENU'
+═══ Anote 常用操作 ═══
+  记笔记      anote new 学科/分支 "标题"     （或: anote 记 数学/代数 "标题"）
+  问知识库    anote ask --semantic "问题"    （或: anote 问 "问题"）
+  读文档      anote read pdfs/xxx.pdf         （或: anote 读 ...）
+  问 AI       anote ai "帮我…"                （说人话，AI 自动执行）
+  文献管理    anote docs list / stats         （或: anote 文献）
+  写论文      anote paper "主题"              （或: anote 写论文 "主题"）
+  自检/保存   anote check / commit "说明"     （或: anote 检查 / 保存）
+  打开界面    anote tui
+  全部命令    anote help
+MENU
+    ;;
+  help|-h|--help)
     if [ -n "$1" ]; then
       # anote help <命令>：显示该命令的用法行
       usage | grep -i "^  anote $1\|用法.*$1\|^  $1 " | head -3
@@ -140,6 +171,18 @@ case "$cmd" in
   convert)
     # anote convert <文件> [--out 输出] [--to 格式] —— 万能文档转换(pandoc)
     python3 "$SKILL/convert.py" "$@" ;;
+  ai)
+    # anote ai "<自然语言>" —— 经 Pi 转成命令并执行（说人话即可）
+    [ -z "$1" ] && { echo "用法: anote ai \"<你想做什么>\""; exit 1; }
+    PROMPT="你是 Anote 命令助手（数据目录 ~/Documents/Anote，命令见 anote help）。用户想: $*。只输出一条要执行的 anote 命令（不要引号包裹、不要解释、不要多余文字）。若用户只是提问，输出: anote ask-pi \"$*\""
+    CMD=$(pi -p "$PROMPT" 2>/dev/null | tr -d '`' | head -1)
+    echo "→ 将执行: $CMD"
+    eval "$CMD" ;;
+  paper-read)
+    # anote 读论文 <arxiv-id> —— 下载+提取+精读笔记+登记 一条龙
+    [ -z "$1" ] && { echo "用法: anote 读论文 <arxiv-id>（如 anote 读论文 2402.00001）"; exit 1; }
+    "$PYV" "$SKILL/fetch_paper.py" --arxivid "$1" --tex-note
+    python3 "$SKILL/docs.py" import ;;
   lint)
     python3 "$SKILL/lint.py" "$@" ;;
   docs-annotations)
