@@ -3,6 +3,7 @@
 import argparse
 import datetime
 import os
+import sys
 
 LATEX_TMPL = r"""% ===== 论文骨架（自动生成）=====
 % 编译: xelatex + bibtex（中文需 xelatex + ctex 宏包）
