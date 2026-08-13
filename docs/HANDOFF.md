@@ -2,7 +2,7 @@
 
 > **本文件是所有会话的"大脑"**：无论何时新开会话维护本项目，先读本文件 + `docs/INTERFACES.md` + `docs/ROADMAP.md`。
 > 覆盖：项目全貌、全部路径、全部命令、数据格式、环境、决策、坑、可移植性。
-> 最后更新：2026-08-10（v1.10.0 阅读管理 M1-M3）
+> 最后更新：2026-08-13（v1.11.0 审计+convert）
 
 ---
 
@@ -129,7 +129,7 @@ git -C ~/Documents/Anote remote add origin <gitee> && anote backup
 - 已完成：P0-P3（配置层/TUI 框架/数据页/迁移向导/引导/统计）；统一入口；语义检索；教科书层；测试；全文档
 - **v1.1 完成**：AI 问答经 Pi（Ctrl+A / anote ask-pi）、反链（anote backlinks）、回顾自动化（weekly-review.sh 草稿+提交）、语义索引自动增量（pre-commit）
 - **v1.3 验证完成**：全链路沙盒通过（bibcheck→latexmk→PDF 引用渲染，BIBINPUTS 方案固化根 latexmkrc）；Zotero 库直读（~Zotero/zotero.sqlite 只读）；**注意：用户库当前 0 条目**，需添加文献并导出 refs.bib（选 "Better BibTeX" 格式非 JSON）
-- **v1.10.0 专业级阅读管理（M1-M3）**：foliate+calibre 已装；anote docs 命令族（registry.md 11 列契约+sha256 去重+stats+import）；anote read 读即登记（📥→📖/进度/最后阅读）；check 第 8 项；M4（Zotero 标注→笔记）M5（文档语义索引）待做
+- **v1.11.0 审计（大模型升级后）**：anote convert（pandoc 40+格式）；docs/AUDIT.md（轻量+任意IO 结论）；三枢纽=pandoc/portkit/MCP
 - **现代化完善**：cli.run 统一守卫（单行错误）、模块契约声明（15 脚本）、配置单点（core.Config shim）、单测 11 项；规范 docs/CODING.md
 - 下一步优先级：v1.1 AI 问答面板 → v0.9 完成 → v1.2 插件/MCP
 - 未闭环：数据仓库 gitee 远程未配置（`anote backup` 只提交不推送）

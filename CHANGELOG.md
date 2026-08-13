@@ -1,5 +1,18 @@
 # 变更日志（CHANGELOG）
 
+## [1.11.0] - 2026-08-13（大模型升级后审计：轻量+任意IO）
+
+### 审计结论（docs/AUDIT.md）
+- **轻量**：核心零第三方依赖；语义检索/TUI/MCP 全部懒加载；BM25 兜底可脱离 fastembed
+- **任意 I/O**：pandoc(40+格式) + portkit(任意插件↔任意) + MCP(任意 AI 工具) 三枢纽
+
+### 新增
+- **`anote convert`**（pandoc 包装）：40+ 格式双向转换（实测 md→docx/html/pdf 链）；中文 PDF 用 xelatex+CJK
+- docs/AUDIT.md 轻量+IO 审计报告
+
+### 待办
+- setup.sh 分层安装（--minimal/--full）；MCP client；LSP 接入
+
 ## [1.10.0] - 2026-08-10（专业级阅读与管理 M1-M3）
 
 ### 新增
