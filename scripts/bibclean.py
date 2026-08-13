@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Clean/dedupe/sort a BibTeX file. Fields: --dedupe, --sort, --normalize."""
 import argparse
+import os
 import re
 import sys
 

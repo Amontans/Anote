@@ -1,5 +1,17 @@
 # 变更日志（CHANGELOG）
 
+## [1.12.0] - 2026-08-13（基础→上层依次实现）
+
+### 基础层
+- **setup.sh 分层安装**：`--minimal`（核心零第三方依赖）/ `--full`（默认，含 fastembed/textual/fastmcp）
+
+### 协议层
+- **MCP client**：`anote external {list|call <名> <工具>}`；services/mcp_client.py（JSON-RPC over stdio）；配置 ~/.config/anote/external.json；自举验证（调用自身 MCP server 成功）
+
+### 应用层
+- **M4 Zotero 标注导入**：`anote docs annotations <标注文件> [--to 笔记]`
+- **M5 文档语义索引层**：语义索引纳入 pdfs/ebooks 的 txt 文本（anote ask --semantic 覆盖文档层）
+
 ## [1.11.0] - 2026-08-13（大模型升级后审计：轻量+任意IO）
 
 ### 审计结论（docs/AUDIT.md）

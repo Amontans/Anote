@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 科研知识库一键自举：在新机器/损坏后重建全部基础设施（幂等，可重复运行）
-# 用法: ./setup.sh [--full]
-#   --full  连语义检索依赖一起安装（首次/换机器时用）
+# 用法: ./setup.sh [--minimal|--full]
+#   --minimal 核心零第三方依赖（基础功能；语义/TUI/MCP 需时再 --full）
+#   --full    装语义检索/TUI/MCP 依赖（默认，首次/换机用）
 set -e
 NOTES=~/Documents/Anote
 PYV=$NOTES/.venv/bin/python
@@ -14,14 +15,19 @@ for cmd in latexmk lualatex pdftotext rg git python3; do
   if command -v $cmd >/dev/null 2>&1; then echo "  ✓ $cmd"; else echo "  ✗ $cmd 缺失（Arch: sudo pacman -S texlive-latexmk poppler ripgrep git python）"; fi
 done
 
-# 2. Python venv + 语义检索依赖（仅 --full 或首次）
+# 2. Python venv（--minimal=核心零 pip；默认=全量依赖）
 echo "── [2/5] Python 环境 ──"
-if [ ! -x "$PYV" ] || [ "$1" == "--full" ]; then
-  python3 -m venv .venv
-  HF_ENDPOINT=https://hf-mirror.com "$PYV" -m pip install -q fastembed numpy
-  echo "  ✓ venv + fastembed/numpy 就绪"
+MODE="${1:-}"
+if [ "$MODE" == "--minimal" ]; then
+  echo "  ✓ minimal 模式：不装第三方依赖（核心纯 stdlib；语义/TUI/MCP 需时再 anote setup --full）"
 else
-  echo "  ✓ venv 已存在（加 --full 重建）"
+  if [ ! -x "$PYV" ] || [ "$MODE" == "--full" ]; then
+    python3 -m venv "$NOTES/.venv"
+    HF_ENDPOINT=https://hf-mirror.com "$PYV" -m pip install -q fastembed numpy textual fastmcp
+    echo "  ✓ venv + fastembed/numpy/textual/fastmcp 就绪"
+  else
+    echo "  ✓ venv 已存在（加 --full 重建）"
+  fi
 fi
 
 # 3. git 钩子
@@ -49,7 +55,9 @@ echo "  ✓ ~/.local/bin/anote（若 PATH 缺 ~/.local/bin 请自行添加）"
 echo "── [6/6] 构建索引 ──"
 python3 scripts/index-gen.py >/dev/null && echo "  ✓ 分层索引"
 if [ -x "$PYV" ]; then
-  HF_ENDPOINT=https://hf-mirror.com "$PYV" scripts/embed.py || echo "  ⚠️ 语义索引失败（可用 notes index-semantic 重试）"
+  HF_ENDPOINT=https://hf-mirror.com "$PYV" scripts/embed.py || echo "  ⚠️ 语义索引失败（可用 anote index-semantic 重试）"
+else
+  echo "  ⚠️ minimal 模式：跳过语义索引（anote setup --full 后 anote index-semantic）"
 fi
 python3 scripts/check.py 2>&1 | tail -1
 

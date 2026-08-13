@@ -49,7 +49,10 @@ class SemanticService:
         for root, dirs, fs in os.walk(self.data):
             dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
             for f in fs:
-                if (f.endswith(".tex") or f.endswith(".md")) and f not in ("00-index.tex", "README.md"):
+                if f in ("00-index.tex", "README.md"):
+                    continue
+                # 索引：笔记(tex/md) + 文档文本层(txt，如 pdfs/*.txt)
+                if f.endswith((".tex", ".md", ".txt")):
                     p = Path(root) / f
                     files[str(p)] = p.stat().st_mtime
         return files

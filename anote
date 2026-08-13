@@ -47,6 +47,7 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote read <路径>             统一阅读（读即登记/进度提示）
   anote docs {list\|add\|update\|progress\|stats\|import}  文档管理（专业图书级）
   anote convert <文件> [--to 格式]  万能文档转换（pandoc 40+格式）
+  anote external {list\|call}   外部 MCP server 接入（消费任意 AI 工具能力）
   anote ebook [list\|extract]   电子书管理/提取文本
   anote index-pdf               批量提取 PDF 文本（可检索）
   anote checklist               投稿前检查清单
@@ -133,12 +134,19 @@ case "$cmd" in
     "$PYV" "$SKILL/web_server.py" "$@" ;;
   export)
     python3 "$SKILL/export.py" "$@" ;;
+  external)
+    # anote external {list|call <名> <工具> [--args JSON]} —— 外部 MCP server 接入
+    "$PYV" "$SKILL/external.py" "$@" ;;
   convert)
     # anote convert <文件> [--out 输出] [--to 格式] —— 万能文档转换(pandoc)
     python3 "$SKILL/convert.py" "$@" ;;
+  docs-annotations)
+    # anote docs annotations <标注文件> [--to 笔记] —— Zotero 标注导入
+    python3 "$SKILL/annotations.py" "$@" ;;
   docs)
-    # anote docs {list|add|update|progress|stats|import}
-    python3 "$SKILL/docs.py" "$@" ;;
+    # anote docs {list|add|update|progress|stats|import|annotations}
+    if [ "$1" == "annotations" ]; then shift; python3 "$SKILL/annotations.py" "$@"
+    else python3 "$SKILL/docs.py" "$@"; fi ;;
   read)
     # anote read <路径> —— 统一阅读入口
     python3 "$SKILL/read.py" "$@" ;;
