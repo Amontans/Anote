@@ -29,9 +29,21 @@ def main() -> int:
     if "--to" in args:
         to = data / args[args.index("--to") + 1]
     if to is None:
-        d = data / "docs" / "annotations"
-        d.mkdir(parents=True, exist_ok=True)
-        to = d / (src_f.stem + ".md")
+        # 自动绑定：在 src/papers/ 找文件名含标注名(去日期/空格)的精读笔记
+        stem = src_f.stem.lower().replace(" ", "_").replace("-", "_")
+        papers = data / "src" / "papers"
+        candidate = None
+        if papers.is_dir():
+            for n in papers.glob("*.tex"):
+                if stem[:8] in n.stem or n.stem[:8] in stem:
+                    candidate = n
+                    break
+        if candidate:
+            to = candidate
+        else:
+            d = data / "docs" / "annotations"
+            d.mkdir(parents=True, exist_ok=True)
+            to = d / (src_f.stem + ".md")
     header = f"\n\n## 标注导入（{src_f.name}）\n" + text.strip()
     if to.exists():
         to.write_text(to.read_text(encoding="utf-8") + header, encoding="utf-8")

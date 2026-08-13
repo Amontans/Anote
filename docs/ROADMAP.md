@@ -96,15 +96,15 @@ v1.2 MCP ──► v2.0 生态（基础已稳）
 ### 剩余审计结论（优先级重排）
 | 项 | 原版本 | 新判断 |
 |----|--------|--------|
-| LSP 接入（texlab） | 待办 | P1——编辑器级能力，但用户主要走 anote/VS Code，可缓 |
+| LSP 接入（texlab） | ✅ anote lint（chktex 已装）；texlab 补全可选装 | P1 |
 | gitee 远程备份 | 未闭环 | **P0**——数据安全命脉，只差用户贴公钥给 URL |
 | 周报/图谱打磨 | v1.6 余项 | P2——已有基础 |
-| READING-PLAN M4 标注闭环剩余（Zotero 标注→精读笔记自动绑定） | M4 部分 | P1 |
-| portkit 集成（anote plugin convert） | 跨项目 | P1——portkit 交接后 |
+| READING-PLAN M4 标注闭环剩余 | ✅ 标注自动绑定精读笔记 | 完成 |
+| portkit 集成 | 跨项目 | 待 portkit 会话（用户：portkit 研制中） |
 
 ### 新增方向（审计发现）
-- **检索评测集增长**：失败查询自动收集 → 补 eval-queries.md（闭环）
-- **文档层分层检索**：`anote ask --layer notes|docs`（当前已合并，可加分）
+- **检索评测集增长**：✅ 失败查询自动收集（query-failures.log）+ eval 建议
+- **文档层分层检索**：✅ `anote ask --semantic --layer notes|docs`
 - **依赖懒加载完整性**：验证 minimal 模式下所有核心命令可用
 
 ## 后续规划（v2.x+，随用随定）

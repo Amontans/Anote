@@ -140,6 +140,8 @@ case "$cmd" in
   convert)
     # anote convert <文件> [--out 输出] [--to 格式] —— 万能文档转换(pandoc)
     python3 "$SKILL/convert.py" "$@" ;;
+  lint)
+    python3 "$SKILL/lint.py" "$@" ;;
   docs-annotations)
     # anote docs annotations <标注文件> [--to 笔记] —— Zotero 标注导入
     python3 "$SKILL/annotations.py" "$@" ;;

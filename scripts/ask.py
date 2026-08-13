@@ -62,14 +62,46 @@ def snippets(path: str, pattern: str, maxchars: int) -> list[str]:
     return out
 
 
+def _in_layer(path: str, layer: str) -> bool:
+    """分层过滤：notes=src/memory/wiki；docs=pdfs/ebooks。"""
+    if layer == "notes":
+        return path.startswith(("src/", "memory/", "wiki/"))
+    if layer == "docs":
+        return path.startswith(("pdfs/", "ebooks/"))
+    return True
+
+
+def _log_failed(query: str, root: str) -> None:
+    """无命中查询记入 memory/query-failures.log（评测闭环）。"""
+    from datetime import date
+    log = Path(root) / "memory" / "query-failures.log"
+    try:
+        with open(log, "a", encoding="utf-8") as f:
+            f.write(f"{date.today().isoformat()} | {query}\n")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def main() -> int:
     args = sys.argv[1:]
     if not args:
         print("用法: anote ask \"<问题>\" [--smart] [--semantic]")
         return 1
-    query = next((a for a in args if not a.startswith("--")), "")
+    # 提取 query：跳过带值 flag（--top/--maxchars/--layer）的值
+    value_flags = {"--top", "--maxchars", "--layer"}
+    i = 0
+    query = ""
+    while i < len(args):
+        a = args[i]
+        if a in value_flags:
+            i += 2
+            continue
+        if not a.startswith("--"):
+            query = a
+            break
+        i += 1
     if not query:
-        print("用法: anote ask \"<问题>\" [--smart] [--semantic]")
+        print("用法: anote ask \"<问题>\" [--smart] [--semantic] [--bm25] [--layer notes|docs]")
         return 1
     smart = "--smart" in args
     semantic = "--semantic" in args
@@ -88,13 +120,23 @@ def main() -> int:
     if semantic:
         from anote.services.retrieval import RetrievalService
         bm25_only = "--bm25" in args
+        layer = None
+        if "--layer" in args:
+            i = args.index("--layer")
+            if i + 1 < len(args):
+                layer = args[i + 1]
         svc = RetrievalService(Config.load().data_dir)
         if not svc.sem.has_index():
             print("尚未建语义索引：先运行 anote index-semantic")
             return 1
-        hits = svc.retrieve(query, top, hybrid=not bm25_only)
+        fetch = top * 6 if layer else top
+        hits = svc.retrieve(query, fetch, hybrid=not bm25_only)
+        if layer:
+            hits = [h for h in hits
+                    if _in_layer(os.path.relpath(h[0].get("path", ""), root), layer)][:top]
         if not hits:
             print("无结果")
+            _log_failed(query, root)
             return 1
         label = "BM25 词法检索" if bm25_only else "混合检索（向量+BM25+重排）"
         print(f"{label}: {query}   范围: {root}\n")
@@ -115,6 +157,7 @@ def main() -> int:
     ranked = sorted(hits, key=hits.get, reverse=True)[:top]
     if not ranked:
         print("无命中。换个关键词，或直接让 AI 读某个文件。")
+        _log_failed(query, root)
         return 0
     print(f"命中 {len(hits)} 个文件，展示前 {len(ranked)} 个：\n" + "=" * 60)
     for f in ranked:

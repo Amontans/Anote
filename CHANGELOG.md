@@ -1,5 +1,16 @@
 # 变更日志（CHANGELOG）
 
+## [1.13.0] - 2026-08-13（剩余项补齐：lint/标注绑定/评测闭环/分层检索）
+
+### 新增
+- **`anote lint <tex>`**：LaTeX 语法/风格检查（chktex 包装；texlab 可装补全）
+- **标注自动绑定**：`anote docs annotations` 自动按文件名匹配 src/papers/ 精读笔记（无匹配则归档）
+- **检索评测闭环**：ask 无命中查询 → memory/query-failures.log；`anote eval` 读取并建议补评测集
+- **分层检索**：`anote ask --semantic --layer notes|docs`（笔记层 vs 文档层）
+
+### 修复
+- ask 参数解析：带值 flag（--layer 等）的值不再被误当 query；分层用相对路径判断
+
 ## [1.12.0] - 2026-08-13（基础→上层依次实现）
 
 ### 基础层

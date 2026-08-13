@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 
 def arxiv_pdf(arxivid, out_dir):

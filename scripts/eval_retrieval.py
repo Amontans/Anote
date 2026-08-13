@@ -53,6 +53,20 @@ def main() -> int:
             print("\n② （eval-queries.md 为空，添加格式: 查询 ===> 文件路径）")
     else:
         print(f"\n② 未建人工查询集：创建 {eq}\n   每行: 查询 ===> 文件相对路径")
+    # ③ 失败查询建议（检索评测闭环）
+    fl = data / "memory" / "query-failures.log"
+    if fl.exists():
+        failed = fl.read_text(encoding="utf-8").splitlines()
+        uniq = []
+        seen = set()
+        for l in failed:
+            q = l.split(" | ", 1)[-1] if " | " in l else l
+            if q and q not in seen:
+                seen.add(q); uniq.append(q)
+        if uniq:
+            print(f"\n③ 失败查询 {len(uniq)} 条（可加入 eval-queries.md 补评测集）:")
+            for q in uniq[-10:]:
+                print(f"    {q} ===> <期望文件>")
     print("\n评测完成。改进方向: 调 RetrievalService(vec_weight) 或补充 eval-queries.md。")
     return 0
 
