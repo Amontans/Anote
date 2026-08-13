@@ -1,5 +1,10 @@
 # Anote 项目交接文档（AI 维护手册 · HANDOFF）
 
+> **文档导航（AI 视角，按需读）**：
+> ① 本文件（交接总纲）→ ② `docs/INTERFACES.md`（契约）→ ③ `docs/CODING.md`（规范）
+> 用户侧文档（回答用户问题时读）：`README.md`（入口）+ `docs/USER-GUIDE.md`（手册）
+> 规划：`docs/ROADMAP.md`；历史决策在 `docs/archive/`
+
 > **本文件是所有会话的"大脑"**：无论何时新开会话维护本项目，先读本文件 + `docs/INTERFACES.md` + `docs/ROADMAP.md`。
 > 覆盖：项目全貌、全部路径、全部命令、数据格式、环境、决策、坑、可移植性。
 > 最后更新：2026-08-13（v1.14.1）
