@@ -20,6 +20,21 @@ PYV="$DATA/.venv/bin/python"
 [ -x "$PYV" ] || PYV=python3   # venv 缺失时回退（语义检索等需 venv 的命令会提示）
 EDITOR_CFG=$(grep -E '^editor=' "$HOME/.config/anote/config" 2>/dev/null | cut -d= -f2-)
 
+example_of() {
+  # 命令 → 常见用法示例（anote help <命令> 用）
+  case "$1" in
+    ask) echo ' 例: anote ask "环是什么"（grep）| anote ask --semantic "..."（混合）| anote ask --semantic --layer docs "..."' ;;
+    new) echo ' 例: anote new 数学/代数 "群论基础"' ;;
+    read) echo ' 例: anote read pdfs/2402.00001.pdf' ;;
+    docs) echo ' 例: anote docs list --status 在读 | anote docs stats' ;;
+    paper) echo ' 例: anote paper "环论" --type 综述' ;;
+    convert) echo ' 例: anote convert paper.md --out paper.docx' ;;
+    backup) echo ' 例: anote backup-create --encrypt' ;;
+    ai) echo ' 例: anote ai "帮我找关于注意力机制的最新论文"' ;;
+    *) echo '' ;;
+  esac
+}
+
 usage() {
   cat <<'EOF'
 anote — Anote 科研知识库统一入口（v0.8.0-dev）
@@ -78,23 +93,6 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
 EOF
 }
 
-# ===== 别名解析（说人话/记不住英文也能用）=====
-case "$1" in
-  问|提问|搜|检索|查询) set -- ask "${@:2}" ;;
-  读|看|阅读) set -- read "${@:2}" ;;
-  记|新建|写笔记|笔记) set -- new "${@:2}" ;;
-  写|写论文|作文) set -- paper "${@:2}" ;;
-  书|写书) set -- book "${@:2}" ;;
-  文献|文档|资料) set -- docs "${@:2}" ;;
-  查|检查|体检) set -- check "${@:2}" ;;
-  统计|概览) set -- stats "${@:2}" ;;
-  存|保存|提交) set -- commit "${@:2}" ;;
-  备份|存档) set -- backup "${@:2}" ;;
-  回顾|总结) set -- review "${@:2}" ;;
-  转换|转) set -- convert "${@:2}" ;;
-  读论文|下载论文) set -- paper-read "${@:2}" ;;
-  帮助|教程) set -- help "${@:2}" ;;
-esac
 cmd="$1"; shift || true
 
 case "$cmd" in
@@ -114,9 +112,11 @@ MENU
     ;;
   help|-h|--help)
     if [ -n "$1" ]; then
-      # anote help <命令>：显示该命令的用法行
-      usage | grep -i "^  anote $1\|用法.*$1\|^  $1 " | head -3
-      [ $? -ne 0 ] && usage | grep "$1" | head -3
+      echo "═══ anote $1 ═══"
+      usage | grep -i "anote $1" | head -3
+      ex=$(example_of "$1")
+      [ -n "$ex" ] && echo "$ex"
+      echo ""
     else
       usage
     fi ;;
@@ -143,6 +143,7 @@ MENU
     sed -e "s|%%DISC%%|${dir%/*}|g" -e "s|%%BRANCH%%|${dir##*/}|g" \
         -e "s|%%TITLE%%|$title|g" -e "s|%%DATE%%|$(date +%F)|g" "$TF" > "$f"
     echo "✓ 已创建: $f（模板: $tpl）"
+    echo "  💡 下一步: 写完 anote commit \"说明\"（自动索引+自检）"
     "${EDITOR_CFG:-code}" "$f" 2>/dev/null || true ;;
   search)
     [ -z "$1" ] && { echo "用法: anote search \"<关键词>\" [--max 10]"; exit 1; }
@@ -299,11 +300,26 @@ MENU
     name="$1"; [ -z "$name" ] && { echo "用法: anote book-build <书名>"; exit 1; }
     cd "$DATA/books/$name" && latexmk -lualatex -interaction=nonstopmode main.tex 2>&1 | tail -3 ;;
   commit)
-    cd "$DATA" && git add -A && git commit -m "${1:-update}" ;;
+    cd "$DATA" && git add -A && git commit -m "${1:-update}"
+    echo "  💡 已提交。定期 anote backup 推送远程备份" ;;
   backup)
     cd "$DATA" && git add -A && git commit -m "backup: $(date '+%Y-%m-%d %H:%M')" || echo "无新变更"
     if git remote -v | grep -q push; then git push && echo "✅ 已推送远程"
     else echo "⚠️ 未配置远程: git remote add origin <gitee 地址>"; fi ;;
   *)
-    echo "未知命令: $cmd"; usage; exit 1 ;;
+    SUGGEST=$(python3 - "$cmd" <<'PYEOF'
+import sys, difflib
+cmd = sys.argv[1]
+known = "ask read new paper book docs check stats commit backup review convert tui index index-semantic lint ai paper-read project chapter book-build release eval meta wiki graph report migrate export web zotero bibcheck fetch_paper extract bibclean new_paper daily archive restore search plugin mcp external docs-annotations index-pdf test help setup".split()
+m = difflib.get_close_matches(cmd, known, n=1, cutoff=0.5)
+print(m[0] if m else "")
+PYEOF
+)
+    if [ -n "$SUGGEST" ]; then
+      echo "✗ 未知命令: $cmd —— 你是不是想说: anote $SUGGEST ?"
+    else
+      echo "✗ 未知命令: $cmd"
+    fi
+    echo "提示: anote（菜单）| anote help（全部）| anote ai \"说人话\""
+    exit 1 ;;
 esac
