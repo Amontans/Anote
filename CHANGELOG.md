@@ -1,5 +1,11 @@
 # 变更日志（CHANGELOG）
 
+## [1.14.2] - 2026-08-13（Vim MD 预览）
+
+### 新增
+- **`anote preview <文件.md|.tex> [--watch]`**：pandoc 转美化 HTML（GitHub 风格 CSS + MathJax）→ 浏览器打开；`--watch` 保存 2 秒内自动刷新（后台循环重渲染）
+- **`~/.vimrc`（极简）**：`F5` 实时预览 / `F6` 一次预览 / `F7` lint + MD 编辑优化
+
 ## [1.14.1] - 2026-08-13（提示与辅助增强）
 
 ### 变更

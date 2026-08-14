@@ -184,6 +184,9 @@ MENU
     [ -z "$1" ] && { echo "用法: anote 读论文 <arxiv-id>（如 anote 读论文 2402.00001）"; exit 1; }
     "$PYV" "$SKILL/fetch_paper.py" --arxivid "$1" --tex-note
     python3 "$SKILL/docs.py" import ;;
+  preview)
+    # anote preview <文件> [--watch] —— MD/TEX 浏览器预览
+    python3 "$SKILL/preview.py" "$@" ;;
   lint)
     python3 "$SKILL/lint.py" "$@" ;;
   docs-annotations)
