@@ -8,6 +8,7 @@
 
 ```bash
 ./setup.sh                     # 首次/换机：初始化数据目录 + venv + 索引 + 命令 + 定时器
+# 或先装 Python 包: pip install -e ".[full]"（bash 入口仍用 ./setup.sh 安装）
 anote                          # 打开菜单（不知道用什么时）
 anote ai "帮我找关于X的论文"     # 说人话，AI 自动执行
 anote new 数学/代数 "标题"      # 记笔记
