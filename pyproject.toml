@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anote"
+version = "1.15.0"
+description = "个人科研知识库操作系统：纯 TEX/MD 资产 + git 版本化 + AI 编排"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+full = [
+    "fastembed==0.8.0",
+    "numpy==2.5.2",
+    "textual==8.2.8",
+    "fastmcp==3.4.7",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
