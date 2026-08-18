@@ -23,6 +23,7 @@ class BooksScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._books = []
+        self._selected_book = None
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -54,6 +55,7 @@ class BooksScreen(Screen):
         if idx is None or idx >= len(self._books):
             return
         name = self._books[idx]
+        self._selected_book = name
         chapters_dir = os.path.join(self.app.context.data_dir, "books", name, "chapters")
         parts = [f"**{name}**", ""]
         if os.path.isdir(chapters_dir):
@@ -83,15 +85,15 @@ class BooksScreen(Screen):
         self.notify(f"✓ 教科书 {name} 已创建")
 
     def action_new_chapter(self) -> None:
-        if not self._books:
-            self.notify("先新建一本书", severity="warning")
+        if not self._selected_book:
+            self.notify("先选择一本书", severity="warning")
             return
-        self.app.push_screen(PromptModal(f"为《{self._books[0] or '?'}》添加章节", "章节标题", on_submit=self._new_chapter))
+        self.app.push_screen(PromptModal(f"为《{self._selected_book}》添加章节", "章节标题", on_submit=self._new_chapter))
 
     def _new_chapter(self, title: str) -> None:
-        if not title.strip() or not self._books:
+        if not title.strip() or not self._selected_book:
             return
-        name = self._books[0]
+        name = self._selected_book
         chapters = os.path.join(self.app.context.data_dir, "books", name, "chapters")
         os.makedirs(chapters, exist_ok=True)
         n = len([f for f in os.listdir(chapters) if f.endswith(".tex")]) + 1
@@ -101,10 +103,10 @@ class BooksScreen(Screen):
         self.notify(f"✓ 章节已创建: ch{n:02d}.tex")
 
     def action_build(self) -> None:
-        if not self._books:
+        if not self._selected_book:
             self.notify("先选择书籍", severity="warning")
             return
-        name = self._books[0]
+        name = self._selected_book
         book_dir = os.path.join(self.app.context.data_dir, "books", name)
         self.notify(f"编译《{name}》…")
         r = subprocess.run(["latexmk", "-lualatex", "-interaction=nonstopmode", "main.tex"],

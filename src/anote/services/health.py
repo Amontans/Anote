@@ -30,19 +30,32 @@ class HealthService:
         results.append(self.check_docs())
         return results
 
-    # ---- 1. 未登记索引 ----
+    # ---- 1. 未登记索引 / 缺索引 ----
     def check_unregistered(self) -> tuple[bool, str]:
         src = self.data / "src"
-        unreg = []
-        for root, _, files in os.walk(src):
-            for f in files:
-                if f.endswith(".tex") and f != "00-index.tex":
-                    idx = Path(root) / "00-index.tex"
-                    if idx.exists() and f not in idx.read_text(encoding="utf-8", errors="ignore") \
-                            and f.replace("_", r"\_") not in idx.read_text(encoding="utf-8", errors="ignore"):
-                        unreg.append(str(Path(root).relative_to(self.data)))
-        if unreg:
-            return False, f"[1] 未登记到 00-index 的笔记 ({len(unreg)}): {unreg[:5]}"
+        missing_idx: list[str] = []
+        unreg: list[str] = []
+        for root, dirs, files in os.walk(src):
+            dirs[:] = [d for d in dirs if not d.startswith((".", "_"))]
+            notes = [f for f in files if f.endswith(".tex") and f != "00-index.tex"]
+            if not notes:
+                continue
+            rel_dir = str(Path(root).relative_to(self.data))
+            idx = Path(root) / "00-index.tex"
+            if not idx.exists():
+                missing_idx.append(rel_dir)
+                continue
+            idx_text = idx.read_text(encoding="utf-8", errors="ignore")
+            for f in notes:
+                if f not in idx_text and f.replace("_", r"\_") not in idx_text:
+                    unreg.append(str(Path(root, f).relative_to(self.data)))
+        if missing_idx or unreg:
+            msg = f"[1] 索引问题: 缺 00-index {len(missing_idx)} 个目录, 未登记笔记 {len(unreg)} 篇"
+            if missing_idx:
+                msg += f"（目录: {missing_idx[:3]}）"
+            if unreg:
+                msg += f"（笔记: {unreg[:3]}）"
+            return False, msg
         return True, "[1] ✓ 所有笔记均已登记"
 
     # ---- 2. 队列缺笔记 ----
@@ -64,11 +77,23 @@ class HealthService:
             return True, "[3] ✓ pdfs/ 为空或不存在"
         q_text = (self.data / "queue.md").read_text(encoding="utf-8", errors="ignore") \
             if (self.data / "queue.md").exists() else ""
-        orphans = [f for f in os.listdir(pdf_dir)
-                   if f.endswith(".pdf") and f.replace(".pdf", "") not in q_text]
+        # PDF 只要在 queue.md 或 docs/registry.md 之一登记，就不算孤儿
+        from .docs import DocService
+        reg = {e.path for e in DocService(self.data).load()}
+        orphans = []
+        for root, dirs, files in os.walk(pdf_dir):
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
+            for f in files:
+                if not f.endswith(".pdf"):
+                    continue
+                p = Path(root) / f
+                rel = str(p.relative_to(self.data))
+                if f.replace(".pdf", "") in q_text or rel in reg:
+                    continue
+                orphans.append(rel)
         if orphans:
-            return False, f"[3] pdfs/ 中 {len(orphans)} 个 PDF 未登记到队列: {orphans[:5]}"
-        return True, "[3] ✓ PDF 附件均有队列条目"
+            return False, f"[3] PDF 未登记（队列或文档登记表均无）: {len(orphans)} 个 {orphans[:5]}"
+        return True, "[3] ✓ PDF 附件均有队列/文档登记"
 
     # ---- 4. 记忆层新鲜度 ----
     def check_memory_freshness(self) -> tuple[bool, str]:

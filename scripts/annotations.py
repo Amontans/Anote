@@ -27,7 +27,10 @@ def main() -> int:
     data = Path(Config.load().data_dir)
     to = None
     if "--to" in args:
-        to = data / args[args.index("--to") + 1]
+        to = (data / args[args.index("--to") + 1]).resolve()
+        if not to.is_relative_to(data.resolve()):
+            print(f"✗ --to 必须位于数据目录内: {data}")
+            return 1
     if to is None:
         # 自动绑定：在 src/papers/ 找文件名含标注名(去日期/空格)的精读笔记
         stem = src_f.stem.lower().replace(" ", "_").replace("-", "_")

@@ -1,60 +1,165 @@
-"""Anote 业务逻辑核心（现代化改造：模块化/类型化/配置单点/结果模式）。
+"""Anote 业务逻辑核心：模块化/类型化/配置单点/结果模式。
 
-分层：CLI/TUI（表现层）→ src/anote 包（业务层）→ 数据目录（数据层）。
+可移植性约定（v1.15）：
+- 唯一用户数据根 = `ANOTE_DATA` 环境变量（优先）或默认 `~/Documents/Anote`；
+- 配置、日志、外部 MCP 注册、迁移日志、默认备份/导出，全部位于数据根下的 `.anote/`；
+- 除数据根外不写任何用户数据，因此项目仓库可直接上传 GitHub。
 """
 from __future__ import annotations
 
 import logging
 import os
+import shutil
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 # src/anote/core.py → src → 项目根
 SRC_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = SRC_DIR.parent
-CONFIG_PATH = Path("~/.config/anote/config").expanduser()
-LOG_PATH = Path("~/.config/anote/logs/anote.log").expanduser()
 DEFAULT_DATA_DIR = Path("~/Documents/Anote").expanduser()
+LEGACY_CONFIG_PATH = Path("~/.config/anote/config").expanduser()
+APP_DIR = ".anote"
+
+
+# ---------------------------------------------------------------------------
+# 路径解析（数据根是唯一真相源；配置不再散落在 ~/.config）
+# ---------------------------------------------------------------------------
+
+def _legacy_data_dir() -> Path | None:
+    """读取旧版 ~/.config/anote/config 中的 data_dir（仅用于一次迁移）。"""
+    if not LEGACY_CONFIG_PATH.exists():
+        return None
+    try:
+        for line in LEGACY_CONFIG_PATH.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if "=" in line and not line.startswith("#"):
+                k, _, v = line.partition("=")
+                if k.strip() == "data_dir":
+                    return Path(v.strip()).expanduser()
+    except OSError:
+        return None
+    return None
+
+
+def resolve_data_dir(use_legacy: bool = True) -> Path:
+    """解析数据根：ANOTE_DATA > 旧配置指针 > 默认目录。"""
+    env = os.environ.get("ANOTE_DATA")
+    if env:
+        return Path(env).expanduser()
+    if use_legacy:
+        legacy = _legacy_data_dir()
+        if legacy is not None:
+            return legacy
+    return DEFAULT_DATA_DIR
+
+
+def app_dir_for(data_dir: Path) -> Path:
+    return Path(data_dir) / APP_DIR
+
+
+def config_path_for(data_dir: Path) -> Path:
+    return app_dir_for(data_dir) / "config"
+
+
+def log_path_for(data_dir: Path) -> Path:
+    return app_dir_for(data_dir) / "logs" / "anote.log"
+
+
+def external_config_path_for(data_dir: Path) -> Path:
+    return app_dir_for(data_dir) / "external.json"
+
+
+def migration_log_path_for(data_dir: Path) -> Path:
+    return app_dir_for(data_dir) / "migration.log"
+
+
+def backup_dir_for(data_dir: Path) -> Path:
+    return app_dir_for(data_dir) / "backups"
+
+
+def export_dir_for(data_dir: Path) -> Path:
+    return app_dir_for(data_dir) / "exports"
+
+
+def _migrate_legacy_config(data_dir: Path) -> None:
+    """旧版 ~/.config/anote/config → <数据根>/.anote/config（幂等）。"""
+    if not LEGACY_CONFIG_PATH.exists():
+        return
+    target = config_path_for(data_dir)
+    try:
+        if not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(LEGACY_CONFIG_PATH, target)
+        # 迁移成功后移除旧文件，保证用户数据只存在于数据根内。
+        # 删除失败不影响使用（只读环境等）。
+        LEGACY_CONFIG_PATH.unlink()
+    except OSError:
+        pass
 
 
 @dataclass
 class Config:
-    """唯一配置模型：单点读写，支持 ANOTE_DATA 环境覆盖（测试/临时）。"""
+    """唯一配置模型：配置文件位于 <数据根>/.anote/config。
+
+    data_dir 由 ANOTE_DATA 或默认目录决定，不信任配置文件中的旧字段；
+    修改 data_dir 必须走 anote migrate --to。
+    """
 
     data_dir: Path = DEFAULT_DATA_DIR
     editor: str = "code"
     lang: str = "zh"
     semantic_model: str = "BAAI/bge-small-zh-v1.5"
     onboarded: str = "false"
-    ai_provider: str = "pi"   # AI 层：默认经 Pi 代理（不直连模型）
-    theme: str = "textual-dark"  # TUI 主题（Textual 内置）
+    ai_provider: str = "pi"       # AI 层：默认经 Pi 代理（不直连模型）
+    pi_bin: str = ""              # 留空时自动在 PATH / ~/.bun/bin 查找
+    theme: str = "textual-dark"   # TUI 主题（Textual 内置）
+    reader: str = ""              # 阅读器（留空时按扩展名自动选择）
 
     @classmethod
     def load(cls) -> "Config":
-        cfg = cls()
         env = os.environ.get("ANOTE_DATA")
-        if CONFIG_PATH.exists():
-            for line in CONFIG_PATH.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if "=" in line and not line.startswith("#"):
-                    k, _, v = line.partition("=")
-                    if hasattr(cfg, k.strip()):
-                        setattr(cfg, k.strip(), v.strip())
-        cfg.data_dir = Path(env).expanduser() if env else Path(str(cfg.data_dir)).expanduser()
+        data_dir = Path(env).expanduser() if env else resolve_data_dir()
+        # 仅非测试/非 env 覆盖时迁移旧配置；ANOTE_DATA 是隔离测试的硬边界
+        if not env:
+            _migrate_legacy_config(data_dir)
+
+        cfg = cls()
+        cfg.data_dir = data_dir
+        path = config_path_for(data_dir)
+        # 新配置不存在时，兼容读取旧配置（例如数据根只读、无法迁移的场景）
+        source = path if path.exists() else (LEGACY_CONFIG_PATH if LEGACY_CONFIG_PATH.exists() else None)
+        if source is not None:
+            try:
+                for line in source.read_text(encoding="utf-8").splitlines():
+                    line = line.strip()
+                    if "=" in line and not line.startswith("#"):
+                        k, _, v = line.partition("=")
+                        k = k.strip()
+                        # data_dir 一律以解析结果为准，不读配置文件里的旧值
+                        if k != "data_dir" and hasattr(cfg, k):
+                            setattr(cfg, k, v.strip())
+            except OSError:
+                pass
         return cfg
 
     def save(self) -> None:
-        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        CONFIG_PATH.write_text(
-            "\n".join(f"{k}={getattr(self, k)}" for k in self.__dataclass_fields__) + "\n",
+        path = config_path_for(self.data_dir)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "\n".join(f"{f.name}={getattr(self, f.name)}"
+                      for f in fields(self)) + "\n",
             encoding="utf-8")
 
-    def set(self, key: str, value: str) -> None:
-        if hasattr(self, key):
-            setattr(self, key, value)
-            self.save()
+    def set(self, key: str, value: str) -> bool:
+        if key == "data_dir":
+            raise ValueError("data_dir 不能直接修改，请使用 anote migrate --to <新路径>")
+        if not hasattr(self, key):
+            raise ValueError(f"未知配置键: {key}")
+        setattr(self, key, value)
+        self.save()
+        return True
 
 
 @dataclass
@@ -82,15 +187,29 @@ class Result:
 
 
 def setup_logging(name: str = "anote") -> logging.Logger:
-    """标准日志：滚动文件 ~/.config/anote/logs/anote.log + 控制台。"""
+    """标准日志：<数据根>/.anote/logs/anote.log + 控制台兜底。
+
+    日志目录不可写时降级为 stderr，绝不让日志失败拖垮命令。
+    """
     logger = logging.getLogger(name)
     if logger.handlers:
         return logger
     logger.setLevel(logging.INFO)
-    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    fh = RotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=3, encoding="utf-8")
-    fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
-    logger.addHandler(fh)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+    file_ok = False
+    try:
+        path = log_path_for(Config.load().data_dir)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fh = RotatingFileHandler(path, maxBytes=1_000_000, backupCount=3, encoding="utf-8")
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+        file_ok = True
+    except Exception:  # noqa: BLE001
+        file_ok = False
+    if not file_ok:
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+        logger.addHandler(sh)
     return logger
 
 
@@ -101,23 +220,18 @@ def ensure_import() -> None:
 
 
 def ai_ask(prompt: str, timeout: int = 180) -> Result:
-    """统一 AI 入口：经 Config.ai_provider 调用（当前唯一实现=pi 代理）。
-
-    - provider=pi: 调用 `pi -p`（Pi 自动加载 Anote 协议/规则/记忆，可检索知识库）
-    - 未来可扩展其他 provider（如直连 API），对上层透明（依赖注入）
-    """
-    import shutil
+    """统一 AI 入口：经 Config.ai_provider 调用（当前唯一实现=pi 代理）。"""
     import subprocess
     cfg = Config.load()
     if cfg.ai_provider == "pi":
-        pi_bin = shutil.which("pi") or str(Path.home() / ".bun/bin/pi")
+        pi_bin = cfg.pi_bin or shutil.which("pi") or str(Path.home() / ".bun/bin/pi")
         try:
             proc = subprocess.run([pi_bin, "-p", prompt], capture_output=True,
                                   text=True, timeout=timeout)
-            return Result(proc.returncode == 0, stdout=proc.stdout.strip(), stderr=proc.stderr.strip(),
-                          exit_code=proc.returncode)
+            return Result(proc.returncode == 0, stdout=proc.stdout.strip(),
+                          stderr=proc.stderr.strip(), exit_code=proc.returncode)
         except subprocess.TimeoutExpired:
             return Result.failure("AI 响应超时", 124)
         except FileNotFoundError:
-            return Result.failure("未找到 pi 命令", 127)
+            return Result.failure(f"未找到 pi 命令: {pi_bin}", 127)
     return Result.failure(f"未支持的 ai_provider: {cfg.ai_provider}")

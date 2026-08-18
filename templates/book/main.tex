@@ -1,0 +1,28 @@
+% ===== 教科书主文件（ctexbook）=====
+% 编译: latexmk -lualatex main.tex  （自动处理章节/引用/索引）
+\documentclass[11pt]{ctexbook}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,graphicx}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{makeidx}
+\makeindex
+
+\title{书名（在 manage.sh book 生成时填入）}
+\author{作者}
+\date{\today}
+
+\begin{document}
+\frontmatter
+\maketitle
+\tableofcontents
+
+\mainmatter
+% 章节按序 include；新章节 = chapters/chNN.tex
+\include{chapters/ch01}
+% \include{chapters/ch02}
+
+\backmatter
+\printindex
+\bibliographystyle{unsrt}
+\bibliography{refs}
+\end{document}

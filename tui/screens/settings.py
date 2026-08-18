@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """设置页：数据目录（可改，P3 接迁移向导）/ 编辑器（可选）/ 语言。"""
 import os
+from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal
@@ -64,8 +65,8 @@ class SettingsScreen(Screen):
     def action_save(self) -> None:
         ctx = self.app.context
         dd = self.query_one("#data_dir", Input).value.strip()
-        if dd:
-            ctx.set_config("data_dir", os.path.expanduser(dd))
+        if dd and Path(os.path.expanduser(dd)) != Path(ctx.data_dir):
+            self.notify("数据目录变更请点“迁移数据位置…”按钮（不会直接修改）", severity="warning")
         ed = self.query_one("#editor", Select).value
         if ed:
             ctx.set_config("editor", str(ed))

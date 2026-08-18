@@ -8,11 +8,11 @@
 ```
 表现层        CLI（scripts/*.py 薄适配器 + anote bash 编排）
                TUI（tui/screens + tui/widgets）
-业务层        src/anote/ 包：core.py（配置/结果/日志）+ services.py（领域服务）
+业务层        src/anote/ 包：core.py（配置/结果/日志/路径）+ services/（22 领域服务）
 数据层        数据目录（纯文本契约，见 INTERFACES）
 ```
 
-- **表现层禁止业务逻辑**：scripts/TUI 只做参数解析、展示、调服务；解析/计算一律进 `services.py`
+- **表现层禁止业务逻辑**：scripts/TUI 只做参数解析、展示、调服务；解析/计算一律进 `services/`
 - **scripts/*.py = 薄适配器**：3 行样板（sys.path → src）+ 调 anote 包 + 打印
 - **TUI = 视图编排**：经 `tui/context.py`（依赖注入点）访问服务，不直接解析数据文件
 
@@ -20,11 +20,11 @@
 
 | 实践 | 落地位置 | 要求 |
 |------|----------|------|
-| **配置单点** | `anote/core.py::Config`（dataclass） | 新增配置键：加字段 + 文档；不散读文件 |
+| **配置单点** | `anote/core.py::Config`（dataclass，配置在 `<数据根>/.anote/config`） | 新增配置键：加字段 + 文档；不散读文件 |
 | **结果模式** | `anote/core.py::Result` | 命令/服务统一返回 Result，禁止裸 exit |
 | **DRY** | `QueueService/NotesService/StatsService` | 同一格式只解析一次；新增解析先进 services |
 | **类型提示** | 全包 | 新代码必须有类型注解；模型用 dataclass |
-| **标准日志** | `setup_logging()` → `~/.config/anote/logs/` | 业务事件记日志，不用 print 调试 |
+| **标准日志** | `setup_logging()` → `<数据根>/.anote/logs/`；不可写自动降级 stderr | 业务事件记日志，不用 print 调试 |
 | **环境覆盖** | `ANOTE_DATA`（bash+python 都支持） | 测试/临时绝不改配置文件 |
 | **测试门禁** | `tests/test_core.py` + `tui/test_smoke.py` + `tui/test_actions.py` | 改动后三套全绿才算完成 |
 | **契约优先** | INTERFACES.md | 数据格式变更先改契约文档 |
@@ -116,24 +116,23 @@ anote release minor
 | 步骤 | 要求 |
 |------|------|
 | 1. 位置 | `scripts/<名>.py`，单一职责，100-300 行 |
-| 2. CLI 契约 | argparse；`--notes` 默认 `~/Documents/Anote`；stdout=结果 stderr=错误；退出码 0/1 |
-| 3. 注册 | `manage.sh` 加 case + usage 行 |
+| 2. CLI 契约 | argparse 或薄解析；数据根由 `ANOTE_DATA`/默认目录决定；stdout=结果 stderr=错误；退出码 0/1 |
+| 3. 注册 | `anote` 加 case + usage 行 + 模糊建议词表（`manage.sh` 仅兼容包装） |
 | 4. 自检 | 涉及结构一致性时在 `check.py` 加 `check_N` |
 | 5. 文档 | 更新 `docs/INTERFACES.md` 表格 + `CHANGELOG.md` |
-| 6. 验证 | `bash manage.sh check` 全绿 + 功能实测 |
+| 6. 验证 | `anote check --strict` 全绿 + `anote test` + 功能实测 |
 
-新增命令模板（manage.sh）：
+新增命令模板（anote）：
 ```bash
   mycmd)
-    arg="$2"; [ -z "$arg" ] && { echo "用法: notes mycmd <arg>"; exit 1; }
-    python3 "$NOTES/scripts/my_script.py" "$arg" ;;
+    python3 "$SKILL/my_script.py" "$@" ;;
 ```
 
 ## 二、组件替换路径（升级就绪）
 
 | 替换 | 做法 | 数据影响 |
 |------|------|:---:|
-| 换嵌入模型 | `embed.py` 改模型名 → `rm -rf .semantic && anote index-semantic --full` | 无 |
+| 换嵌入模型 | `.anote/config` 改 `semantic_model` 或 `embed.py` 默认值 → `rm -rf .semantic && anote index-semantic --full` | 无 |
 | 换向量库（ChromaDB 等） | 只改 `embed.py`（写）与 `ask.py::semantic_search`（读），CLI 接口不变 | 无 |
 | 加 Web 外壳 | 新目录，只读 `src/` + `.semantic/`，写经 `anote commit` | 无 |
 | 加知识编译层（wiki） | 新增 `wiki.py`，读 `src/` 写 `memory/` | 无 |
@@ -141,7 +140,7 @@ anote release minor
 ## 三、接口变更纪律
 
 - 冻结格式（**永不破坏**）：`src/` 笔记+META、`memory/` 结构、`queue.md` 列结构
-- 可重建派生物（随便改）：`.semantic/`、`00-index.tex`、`reviews/`
+- 可重建派生物（随便改）：`.semantic/`、`00-index.tex`、`reviews/`、`.anote/logs/`、`.anote/backups/`
 - 新增参数必带默认值（=旧行为）；删功能先弃用一版；任何变更更新 CHANGELOG
 
 ## 四、版本历史
@@ -156,9 +155,9 @@ anote release minor
 ## 五、升级步骤（通用）
 
 ```bash
-cd ~/Projects/Anote
+cd <项目目录>
 git pull                        # 有远程时
-./setup.sh                      # 自举（依赖/venv/索引/自检）
-anote check                     # 全绿即完成
+./setup.sh                      # 自举（骨架/依赖/venv/索引/自检）
+anote check --strict            # 全绿即完成
 ```
 任何时刻 `src/` 完好 ⇒ 系统可 100% 重建。

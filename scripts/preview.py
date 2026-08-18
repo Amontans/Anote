@@ -57,9 +57,10 @@ def main() -> int:
         print(f"✗ 不存在: {inp}")
         return 1
     watch = "--watch" in args
-    out = Path("/tmp") / f"anote-preview-{inp.stem}.html"
+    out = (data / ".anote" / "previews" / f"{inp.stem}.html") if data else         Path("/tmp") / f"anote-preview-{inp.stem}.html"
     if "--out" in args:
         out = Path(os.path.expanduser(args[args.index("--out") + 1]))
+    out.parent.mkdir(parents=True, exist_ok=True)
 
     render(inp, out)
 

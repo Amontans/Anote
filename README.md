@@ -2,11 +2,12 @@
 
 > 纯 TEX/MD 资产 + git 版本化 + AI（经 Pi）编排。**说人话即可用：`anote ai "帮我…"`**。
 
-**版本**: 1.14.1 · **协议**: MIT · **依赖**: 核心零第三方（重型功能按需）
+**版本**: 1.15.0 · **协议**: MIT · **依赖**: 核心零第三方（重型功能按需）
 
 ## 🚀 快速开始
 
 ```bash
+./setup.sh                     # 首次/换机：初始化数据目录 + venv + 索引 + 命令 + 定时器
 anote                          # 打开菜单（不知道用什么时）
 anote ai "帮我找关于X的论文"     # 说人话，AI 自动执行
 anote new 数学/代数 "标题"      # 记笔记
@@ -32,22 +33,24 @@ anote commit "说明"             # 保存（自动索引+自检）
 ## 📁 目录结构
 
 ```
-~/Projects/Anote/        # 项目（代码+文档，MIT）
-├── anote  setup.sh       # 统一入口 / 一键自举
-├── scripts/              # 56 个薄适配器（CLI）
-├── src/anote/            # 业务逻辑包（core + services 17 领域）
+<项目目录>/               # 代码+文档（MIT；无任何用户数据，可直接上传 GitHub）
+├── anote  setup.sh       # 统一入口 / 一键自举（自动推导项目路径）
+├── scripts/              # 42 个 Python + 4 个 shell 薄适配器（CLI）
+├── src/anote/            # 业务逻辑包（core + services 22 领域）
 ├── tui/                  # 终端界面（10 屏）
-├── templates/ plugins/   # 模板 / 插件
+├── templates/            # 笔记/精读/教科书/项目模板
+├── config/               # systemd 模板（@@PROJECT@@ 占位）与 git hooks 模板
 ├── docs/                 # 文档（见上导航）
 └── tests/                # 测试（门禁）
 
-~/Documents/Anote/        # ★ 你的数据（纯文本，git 版本化）
+<数据根>（默认 ~/Documents/Anote；ANOTE_DATA 可覆盖）＝唯一用户数据位置
 ├── src/                  # 笔记（TEX，唯一真相源）
 ├── memory/               # 记忆层（日志/洞见/概念/问题/回顾/周报）
 ├── books/ projects/      # 教科书 / 研究项目
 ├── docs/registry.md      # 文档登记表
 ├── queue.md roadmap.md refs.bib
-└── pdfs/ ebooks/         # 文档库
+├── pdfs/ ebooks/         # 文档库
+└── .anote/               # ★ 配置/config、日志/logs、MCP注册、迁移日志、backups/
 ```
 
 ## ✨ 核心能力
@@ -56,5 +59,5 @@ anote commit "说明"             # 保存（自动索引+自检）
 - **混合检索**：BM25 + 向量语义 + 分层（笔记/文档）
 - **三枢纽互通**：pandoc(40+格式) / portkit(任意插件) / MCP(任意 AI 工具)
 - **轻量**：核心零依赖；重型功能懒加载；`setup.sh --minimal`
-- **数据安全**：git + 每日备份 + 周日加密冷备 + 迁移向导(含.git)
-- **可移植**：数据目录拷走即无缝衔接
+- **数据安全**：git + 每日备份 + 周日加密冷备（默认 `.anote/backups/`）+ 迁移向导(含.git)
+- **可移植**：**所有用户数据（配置/日志/API注册/文档）都在数据根内**；项目仓库无用户数据，可直接开源上传；数据目录拷走即无缝衔接

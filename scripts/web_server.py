@@ -32,11 +32,19 @@ class Handler(SimpleHTTPRequestHandler):
             return True
         return qs.get("t", [""])[0] == TOKEN
 
+    def _forbidden(self, path: str) -> bool:
+        """数据目录内禁止直接访问的运行/敏感目录。"""
+        first = path.lstrip("/").split("/", 1)[0]
+        return first in (".git", ".venv", ".semantic", ".anote")
+
     def do_GET(self):
         parsed = urlparse(self.path)
         qs = parse_qs(parsed.query)
         if not self._check_token(qs):
             self.send_error(403, "口令错误")
+            return
+        if self._forbidden(parsed.path):
+            self.send_error(404, "不存在")
             return
         if parsed.path == "/":
             self._index()
@@ -48,6 +56,8 @@ class Handler(SimpleHTTPRequestHandler):
     def _index(self):
         items = []
         for d in sorted(p for p in DATA.iterdir() if p.is_dir() and p.name not in (".venv", ".semantic", ".git")):
+            if d.name in (".venv", ".semantic", ".git", ".anote"):
+                continue
             items.append(f'<li><a href="/{html.escape(d.name)}/">{html.escape(d.name)}/</a></li>')
         self._html("Anote 只读浏览", f"<h1>Anote 知识库</h1><form action='/search'><input name='q' placeholder='全文搜索'><button>搜索</button></form><ul>{''.join(items)}</ul>")
 

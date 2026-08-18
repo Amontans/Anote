@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Anote 核心/服务单元测试（stdlib unittest，临时目录隔离，ANOTE_DATA env）。"""
+import json
 import os
 import sys
 import tempfile
@@ -8,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
-from anote.core import Config, Result  # noqa: E402
+from anote.core import Config, Result, config_path_for  # noqa: E402
 from anote.services import BibService, NotesService, QueueService, StatsService  # noqa: E402
 
 
@@ -18,15 +19,23 @@ class TestConfig(unittest.TestCase):
             with patch.dict(os.environ, {"ANOTE_DATA": t}):
                 cfg = Config.load()
                 self.assertEqual(cfg.data_dir, Path(t))
+                self.assertEqual(config_path_for(cfg.data_dir), Path(t) / ".anote" / "config")
 
-    def test_save_set(self):
+    def test_save_set_and_reader(self):
         with tempfile.TemporaryDirectory() as t:
-            cfg_path = Path(t) / "config"
-            with patch("anote.core.CONFIG_PATH", cfg_path):
-                cfg = Config()
+            with patch.dict(os.environ, {"ANOTE_DATA": t}):
+                cfg = Config.load()
                 cfg.set("editor", "vim")
+                cfg.set("reader", "zathura")
                 self.assertEqual(Config.load().editor, "vim")
-                self.assertTrue(cfg_path.exists())
+                self.assertEqual(Config.load().reader, "zathura")
+                self.assertTrue((Path(t) / ".anote" / "config").exists())
+
+    def test_data_dir_cannot_be_set_directly(self):
+        with tempfile.TemporaryDirectory() as t:
+            with patch.dict(os.environ, {"ANOTE_DATA": t}):
+                with self.assertRaises(ValueError):
+                    Config().set("data_dir", "/tmp/elsewhere")
 
     def test_result(self):
         r = Result.success("ok")
@@ -90,6 +99,15 @@ class TestNotesService(unittest.TestCase):
         self.assertEqual(len(s.filter("环")), 1)
         self.assertEqual(len(s.filter("")), 2)
 
+    def test_create_does_not_overwrite_and_escapes(self):
+        with patch.dict(os.environ, {"ANOTE_DATA": str(self.dir)}):
+            s = NotesService(self.dir)
+            p = s.create("物理/量子", "A & B")
+            self.assertTrue(p.exists())
+            self.assertIn(r"\&", p.read_text(encoding="utf-8"))
+            with self.assertRaises(FileExistsError):
+                s.create("物理/量子", "A & B")
+
 
 class TestStatsService(unittest.TestCase):
     def test_compute(self):
@@ -110,41 +128,16 @@ class TestStatsService(unittest.TestCase):
             self.assertEqual(st["回顾草稿"], 1)
 
 
-
-
-class TestPaper(unittest.TestCase):
-    def test_collect_materials_bm25(self):
-        import json as _json
-        import tempfile
-        with tempfile.TemporaryDirectory() as t:
-            d = Path(t)
-            (d / "src/数学/代数").mkdir(parents=True)
-            (d / "src/数学/代数/环论.tex").write_text(
-                "% ==META== 学科: 数学 | 分支: 代数 | 标签: 环 | 日期: 2026-08-10\n"
-                "\\section{环}\n环是带有两个二元运算的集合。\n", encoding="utf-8")
-            (d / ".semantic").mkdir()
-            (d / ".semantic/chunks.json").write_text(_json.dumps({
-                "schema_version": 1,
-                "chunks": [{"path": str(d / "src/数学/代数/环论.tex"), "mtime": 1,
-                            "text": "环 环是带有两个二元运算的集合 交换群 分配律"}]}), encoding="utf-8")
-            from anote.services.paper import collect_materials
-            m = collect_materials("环", d, top=3)
-            self.assertTrue(any("环论.tex" in n for n in m["notes"]))
-
-
-if __name__ == "__main__":
-    unittest.main()
-
-
-
 class TestBibService(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.dir = Path(self._tmp.name)
         (self.dir / "src/数学").mkdir(parents=True)
         (self.dir / "src/数学/a.tex").write_text(
-            "% ==META== 学科: 数学 | 日期: 2026-08-09\n\\section{x}\n\\cite{keyA}\n% \\cite{commented}\n", encoding="utf-8")
-        (self.dir / "refs.bib").write_text("@article{keyA, title={A}}\n@article{unused, title={U}}\n", encoding="utf-8")
+            "% ==META== 学科: 数学 | 日期: 2026-08-09\n\\section{x}\n\\cite{keyA}\n% \\cite{commented}\n",
+            encoding="utf-8")
+        (self.dir / "refs.bib").write_text(
+            "@article{keyA, title={A}}\n@article{unused, title={U}}\n", encoding="utf-8")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -152,13 +145,28 @@ class TestBibService(unittest.TestCase):
     def test_bib(self):
         bib = BibService(self.dir)
         self.assertEqual(bib.keys(), {"keyA", "unused"})
-        self.assertEqual(bib.cited_keys(), {"keyA"})  # 注释的 commented 不算
+        self.assertEqual(bib.cited_keys(), {"keyA"})
         self.assertEqual(bib.missing(), [])
         self.assertEqual(bib.unused(), ["unused"])
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestPaper(unittest.TestCase):
+    def test_collect_materials_bm25(self):
+        with tempfile.TemporaryDirectory() as t:
+            d = Path(t)
+            (d / "src/数学/代数").mkdir(parents=True)
+            (d / "src/数学/代数/环论.tex").write_text(
+                "% ==META== 学科: 数学 | 分支: 代数 | 标签: 环 | 日期: 2026-08-10\n"
+                "\\section{环}\n环是带有两个二元运算的集合。\n", encoding="utf-8")
+            (d / ".semantic").mkdir()
+            (d / ".semantic/chunks.json").write_text(json.dumps({
+                "schema_version": 1,
+                "chunks": [{"path": str(d / "src/数学/代数/环论.tex"), "mtime": 1,
+                            "text": "环 环是带有两个二元运算的集合 交换群 分配律"}]}),
+                encoding="utf-8")
+            from anote.services.paper import collect_materials
+            m = collect_materials("环", d, top=3)
+            self.assertTrue(any("环论.tex" in n for n in m["notes"]))
 
 
 class TestWikiGroup(unittest.TestCase):
@@ -168,20 +176,15 @@ class TestWikiGroup(unittest.TestCase):
         notes = [
             Note(Path("/x"), "src/数学/代数/环论.tex", "环论", {"学科": "数学", "分支": "代数"}),
             Note(Path("/x"), "src/数学/代数/群论.tex", "群论", {"学科": "数学", "分支": "代数"}),
-            Note(Path("/x"), "src/物理/量子/态.tex", "态", {}),  # 目录推断
+            Note(Path("/x"), "src/物理/量子/态.tex", "态", {}),
         ]
         g = group_notes(notes)
         self.assertEqual(len(g[("数学", "代数")]), 2)
         self.assertEqual(len(g[("物理", "量子")]), 1)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestRetrieval(unittest.TestCase):
     def test_bm25_ranks(self):
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
         from anote.services.retrieval import BM25Index, tokenize
         chunks = [
             {"text": "环是带有两个二元运算的集合，加法构成交换群"},
@@ -199,35 +202,23 @@ class TestRetrieval(unittest.TestCase):
         self.assertTrue(any("环" in t for t in tokenize("环论基础")))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestEbook(unittest.TestCase):
     def test_extract_epub(self):
-        import io, zipfile as zf
-        import tempfile
+        import io
+        import zipfile as zf
         from anote.services.ebooks import extract_epub
         with tempfile.TemporaryDirectory() as t:
             p = Path(t) / "test.epub"
             with zf.ZipFile(p, "w") as z:
-                z.writestr("content/ch1.xhtml", "<html><body><h1>第一章</h1><p>环论基础内容。</p></body></html>")
+                z.writestr("content/ch1.xhtml",
+                           "<html><body><h1>第一章</h1><p>环论基础内容。</p></body></html>")
             text = extract_epub(p)
             self.assertIn("第一章", text)
             self.assertIn("环论", text)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestDocs(unittest.TestCase):
     def setUp(self):
-        import tempfile
         self._tmp = tempfile.TemporaryDirectory()
         self.dir = Path(self._tmp.name)
         (self.dir / "pdfs").mkdir()
@@ -241,10 +232,8 @@ class TestDocs(unittest.TestCase):
         svc = DocService(self.dir)
         ok, _ = svc.add("pdfs/测试.pdf")
         self.assertTrue(ok)
-        # 去重：同文件再 add 应失败
         ok2, msg = svc.add("pdfs/测试.pdf")
         self.assertFalse(ok2)
-        # 状态流转
         svc.mark_read("pdfs/测试.pdf")
         svc.progress("pdfs/测试.pdf", "50%")
         e = svc.find("pdfs/测试.pdf")
@@ -253,6 +242,19 @@ class TestDocs(unittest.TestCase):
         st = svc.stats()
         self.assertEqual(st["total"], 1)
         self.assertEqual(st["status"]["📖"], 1)
+
+
+class TestBootstrap(unittest.TestCase):
+    def test_ensure_data_dir(self):
+        from anote.services.bootstrap import ensure_data_dir
+        with tempfile.TemporaryDirectory() as t:
+            d = Path(t)
+            with patch.dict(os.environ, {"ANOTE_DATA": str(d)}):
+                r1 = ensure_data_dir(d)
+                self.assertGreater(r1["created_files"], 0)
+                self.assertTrue((d / ".anote" / "config").exists())
+                r2 = ensure_data_dir(d)
+                self.assertEqual(r2["created_files"], 0)
 
 
 if __name__ == "__main__":

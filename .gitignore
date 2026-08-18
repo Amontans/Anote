@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+
+# 构建产物 / 用户文档（用户数据一律在数据根）
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.toc
+*.nav
+*.snm
+*.vrb
+*.pdf
+*.tar.gz
+*.enc
+
+# 旧示例/用户数据（应存放于数据根，历史文件仅本地保留）
+/refs.bib
+/ring-theory-paper.tex
+/ring-theory-paper.pdf

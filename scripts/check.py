@@ -2,8 +2,8 @@
 """anote check —— 一致性自检（薄适配器；逻辑在 services/health.py）。
 
 接口声明（契约）:
-    输入: argv（无）
-    输出: stdout=7 项报告；退出码 0（报告型）
+    输入: [--strict]（strict 时发现问题返回退出码 1，供 CI/门禁使用）
+    输出: stdout=8 项检查报告；退出码 0（报告型）或 1（--strict 且有警告）
     副作用: 无
 """
 import os
@@ -15,6 +15,7 @@ from anote.services import HealthService  # noqa: E402
 
 
 def main() -> int:
+    strict = "--strict" in sys.argv[1:]
     results = HealthService(Config.load().data_dir).run()
     problems = 0
     print("=== 知识库自检 ===")
@@ -25,8 +26,8 @@ def main() -> int:
     print("\n=== 结果 ===")
     if problems:
         print(f"⚠️ 共 {problems} 项需处理（可让 Pi 协助修复）")
-    else:
-        print("✅ 全部正常")
+        return 1 if strict else 0
+    print("✅ 全部正常")
     return 0
 
 

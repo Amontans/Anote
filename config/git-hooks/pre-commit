@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Anote 数据仓库 pre-commit：自动索引 + 自检提示（不阻断提交）。
+DATA="$(cd "$(dirname "$0")/../.." && pwd)"
+export ANOTE_DATA="$DATA"
+if command -v anote >/dev/null 2>&1; then
+  anote index >/dev/null 2>&1 || true
+  git add -A 2>/dev/null || true
+  anote check 2>&1 | grep -E "⚠️|✅ 全部" | head -5
+fi

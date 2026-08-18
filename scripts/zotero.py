@@ -8,11 +8,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 from anote.core import Config  # noqa: E402
 from anote.services import zotero as z  # noqa: E402
 
-SETUP_GUIDE = """Zotero + Better BibTeX 接入步骤（已确认插件安装成功）：
+SETUP_GUIDE = """Zotero + Better BibTeX 接入步骤：
 
-1. 往 Zotero 添加文献（当前库为空：0 条目）——浏览器连接器抓取或手动添加。
+1. 往 Zotero 添加文献——浏览器连接器抓取或手动添加。
 2. 导出 refs.bib：右键 我的文库 → 导出 → 格式选 "Better BibTeX"（不要选 JSON！）
-   → 勾选 "保持更新" → 保存到 ~/Documents/Anote/refs.bib
+   → 勾选 "保持更新" → 保存到 {refs}
 3. 验证：anote zotero bib 显示统计；anote bibcheck 校验引用链路
 """
 
@@ -22,7 +22,7 @@ def main() -> int:
     data = Config.load().data_dir
     refs = Path(data) / "refs.bib"
     if sub == "setup":
-        print(SETUP_GUIDE)
+        print(SETUP_GUIDE.format(refs=refs))
         return 0
     if sub == "bib":
         entries = z.parse_bib(refs)

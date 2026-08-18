@@ -25,20 +25,14 @@ TMP = tempfile.mkdtemp(prefix="anote-test-")
 
 def setup_module():
     os.environ["ANOTE_DATA"] = TMP
-    for d in ["src/数学/代数", "memory/reviews", "books", "projects", "pdfs"]:
-        os.makedirs(os.path.join(TMP, d), exist_ok=True)
-    with open(os.path.join(TMP, "src/数学/代数/群论基础.tex"), "w", encoding="utf-8") as f:
+    from anote.services.bootstrap import ensure_data_dir
+    ensure_data_dir(TMP)
+    note_dir = os.path.join(TMP, "src", "数学", "代数")
+    os.makedirs(note_dir, exist_ok=True)
+    with open(os.path.join(note_dir, "群论基础.tex"), "w", encoding="utf-8") as f:
         f.write("% ==META== 学科: 数学 | 分支: 代数 | 标签: 群 | 日期: 2026-08-09 | 来源: 教材\n\\documentclass{ctexart}\n\\begin{document}\n\\section{群}\n群是集合配合二元运算。\n\\end{document}\n")
     with open(os.path.join(TMP, "queue.md"), "w", encoding="utf-8") as f:
         f.write("# 队列\n\n| 状态 | 日期 | 论文 | ID | 笔记 |\n|------|------|------|----|------|\n| 📥 | 2026-08-09 | 测试论文 | 2401.00001 | — |\n")
-    with open(os.path.join(TMP, "memory/research-log.md"), "w", encoding="utf-8") as f:
-        f.write("# 研究日志\n\n## 2026-08-09\n- 测试\n")
-    for n in ["insights.md", "concepts.md", "open-questions.md"]:
-        with open(os.path.join(TMP, f"memory/{n}"), "w", encoding="utf-8") as f:
-            f.write(f"# {n}\n")
-    shutil.copytree(os.path.join(os.path.expanduser("~/Documents/Anote"), "books", "_template"), os.path.join(TMP, "books", "_template"))
-    shutil.copy(os.path.join(os.path.expanduser("~/Documents/Anote"), "books", "_template", "chapters", "ch01.tex"),
-                os.path.join(TMP, "books", "_template", "chapters", "ch01.tex"))
 
 
 async def main():
@@ -65,7 +59,7 @@ async def main():
             await pilot.press("ctrl+h"); assert isinstance(app.screen, HomeScreen)
             await pilot.press("f5")
             await pilot.pause(0.2)
-            print("SMOKE OK: 10 屏导航 + 挂载全部通过")
+            print("SMOKE OK: TUI 导航 + 全部屏幕挂载通过")
     finally:
         os.environ.pop("ANOTE_DATA", None)
         shutil.rmtree(TMP, ignore_errors=True)

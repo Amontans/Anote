@@ -5,9 +5,9 @@
   anote external list                        # 列出注册的外部 server
   anote external call <名> <工具> [--args '{"k":"v"}']
 接口声明（契约）:
-    输入: 见上；配置在 ~/.config/anote/external.json
+    输入: 见上；配置在 <数据根>/.anote/external.json
     输出: stdout=结果；退出码 0/1
-    副作用: 无（只调外部服务）
+    副作用: 无（只调外部服务；注册表在 <数据根>/.anote/external.json）
 """
 import json
 import os
@@ -22,7 +22,8 @@ def main() -> int:
     if not args or args[0] == "list":
         servers = load_servers()
         if not servers:
-            print("（未注册外部 server。配置 ~/.config/anote/external.json:）")
+            print("（未注册外部 server。配置 <数据根>/.anote/external.json:）")
+            print("  路径: <数据根>/.anote/external.json")
             print('  {"servers": {"名": {"command": ["python3", "-m", "xxx"]}}}')
             return 0
         for name, cfg in servers.items():

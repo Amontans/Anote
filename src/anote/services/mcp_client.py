@@ -1,7 +1,7 @@
 """MCP 客户端服务（v1.12 协议层）：让 Anote 接入任意外部 MCP server。
 
 通过 JSON-RPC over stdio 与外部 MCP server 通信（initialize → tools/list → tools/call）。
-外部 server 注册在 ~/.config/anote/external.json：
+外部 server 注册在 <数据根>/.anote/external.json：
   {"servers": {"<名>": {"command": ["python3", "-m", "xxx"]}}}
 """
 from __future__ import annotations
@@ -11,14 +11,19 @@ import os
 import subprocess
 from pathlib import Path
 
-CONFIG = Path("~/.config/anote/external.json").expanduser()
+from ..core import Config, external_config_path_for
+
+
+def _config_path() -> Path:
+    return external_config_path_for(Config.load().data_dir)
 
 
 def load_servers() -> dict:
-    if not CONFIG.exists():
+    cfg_path = _config_path()
+    if not cfg_path.exists():
         return {}
     try:
-        return json.loads(CONFIG.read_text(encoding="utf-8")).get("servers", {})
+        return json.loads(cfg_path.read_text(encoding="utf-8")).get("servers", {})
     except Exception:  # noqa: BLE001
         return {}
 

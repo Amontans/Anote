@@ -2,4 +2,4 @@
 Description=Anote 科研知识库每周自动回顾（草稿+提交）
 [Service]
 Type=oneshot
-ExecStart=/bin/bash /home/Amontans/Projects/Anote/scripts/weekly-review.sh
+ExecStart=/bin/bash @@PROJECT@@/scripts/weekly-review.sh

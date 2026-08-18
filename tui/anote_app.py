@@ -8,6 +8,7 @@
 - 设置变更：SettingsScreen 发 ConfigChanged → 本应用转发刷新
 """
 import os
+from pathlib import Path
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -29,7 +30,7 @@ from tui.screens.settings import SettingsScreen
 
 class AnoteApp(App):
     TITLE = "Anote · 科研知识库"
-    SUB_TITLE = "v0.8.0-dev"
+    SUB_TITLE = "v" + (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip() if (Path(__file__).resolve().parents[1] / "VERSION").exists() else "dev"
     CSS = """
     Screen { background: #1e1e2e; }
     #stats { padding: 1 2; border: round #585b70; margin: 1 0; }

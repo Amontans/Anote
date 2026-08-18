@@ -23,13 +23,13 @@ class HelpScreen(Screen):
 {rows}
 
 ## 2 分钟上手
-1. `notes new 数学/代数 "标题"` — 建第一篇笔记（自动 META 模板）
-2. `notes ask --semantic "问题"` — 对知识库提问
-3. `notes review` — 周回顾（AI 提炼，你确认）
-4. `notes book "书名"` — 开写教科书
+1. `anote new 数学/代数 "标题"` — 建第一篇笔记（自动 META 模板）
+2. `anote ask --semantic "问题"` — 对知识库提问
+3. `anote review` — 周回顾（AI 提炼，你确认）
+4. `anote book "书名"` — 开写教科书
 
 ## 更多
-- 完整文档：`~/Projects/Anote/README.md`（含 AI 操作协议）
+- 完整文档：项目目录 `README.md` 与 `docs/USER-GUIDE.md`
 - 接口契约：`docs/INTERFACES.md`
 - 忘记细节？直接问 Pi——它已读 Anote 协议
 """)

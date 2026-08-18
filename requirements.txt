@@ -1,0 +1,5 @@
+# Anote 全量模式依赖（Python >= 3.10；minimal 模式不需要）
+fastembed==0.8.0
+numpy==2.5.2
+textual==8.2.8
+fastmcp==3.4.7

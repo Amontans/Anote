@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # anote release <major|minor|patch> —— 发布门禁（测试→版本递增→tag）
 set -e
+PROJ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TYPE="${1:-minor}"
 case "$TYPE" in major|minor|patch) ;; *) echo "用法: anote release <major|minor|patch>"; exit 1;; esac
 
 echo "═══ ① 测试门禁 ═══"
-bash ~/Projects/Anote/scripts/run-tests.sh || { echo "✗ 门禁失败，中止发布"; exit 1; }
+bash "$PROJ/scripts/run-tests.sh" || { echo "✗ 门禁失败，中止发布"; exit 1; }
 
 echo "═══ ② 版本递增 ═══"
-cd ~/Projects/Anote
+cd "$PROJ"
 V=$(cat VERSION)
 MAJ=${V%%.*}; REST=${V#*.}; MIN=${REST%%.*}; PAT=${REST##*.}
 case "$TYPE" in

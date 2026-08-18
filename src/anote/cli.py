@@ -23,7 +23,7 @@ T = TypeVar("T")
 def run(entry: Callable[[], Union[Result, int, None]], name: str = "") -> int:
     """统一入口守卫：捕获一切异常 → 单行可读错误（类型+位置）→ 退出码 1。
 
-    - 不打印长 traceback（细节进日志 ~/.config/anote/logs/anote.log）
+    - 不打印长 traceback（细节进日志 <数据根>/.anote/logs/anote.log）
     - Result 结果自动按 stdout/stderr 约定输出
     """
     logger = setup_logging(f"anote.cli.{name}" if name else "anote.cli")

@@ -14,15 +14,10 @@ TMP = tempfile.mkdtemp(prefix="anote-act-")
 
 def setup():
     os.environ["ANOTE_DATA"] = TMP
-    for d in ["src", "memory/reviews", "books", "projects", "pdfs"]:
-        os.makedirs(os.path.join(TMP, d), exist_ok=True)
-    for n in ["research-log.md", "insights.md", "concepts.md", "open-questions.md"]:
-        with open(os.path.join(TMP, f"memory/{n}"), "w", encoding="utf-8") as f:
-            f.write(f"# {n}\n")
+    from anote.services.bootstrap import ensure_data_dir
+    ensure_data_dir(TMP)
     with open(os.path.join(TMP, "queue.md"), "w", encoding="utf-8") as f:
         f.write("# 队列\n\n| 状态 | 日期 | 论文 | ID | 笔记 |\n|------|------|------|----|------|\n| 📥 | 2026-08-09 | 测试论文 | 2401.00001 | — |\n")
-    # 书籍模板
-    shutil.copytree(os.path.join(os.path.expanduser("~/Documents/Anote"), "books", "_template"), os.path.join(TMP, "books", "_template"))
 
 
 async def main():

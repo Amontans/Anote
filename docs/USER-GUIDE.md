@@ -5,10 +5,11 @@
 ## 一、5 分钟上手
 
 ```bash
+./setup.sh                     # 首次安装（数据骨架/venv/索引/命令/定时器）
 anote                          # 打开菜单（不知道用什么时）
 anote ai "帮我找关于X的论文"     # 说人话，AI 自动执行
-anote 记笔记 → anote new 数学/代数 "标题"   # 记笔记
-anote 问 → anote ask --semantic "问题"     # 问知识库
+anote new 数学/代数 "标题"      # 记笔记
+anote ask --semantic "问题"     # 问知识库
 ```
 
 ## 二、常用命令速查（按场景分组）
@@ -97,6 +98,9 @@ anote check（自检）→ anote review（回顾草稿，AI 提炼你确认）
 
 ## 六、数据在哪（可移植）
 
-- 代码：`~/Projects/Anote/`（项目，MIT）
-- 你的数据：`~/Documents/Anote/`（纯文本，git 版本化）
-- 换电脑：拷数据目录 → clone 项目 → `./setup.sh` → `anote check` 全绿
+- 代码：项目目录（MIT；**不含任何用户数据**，可直接上传 GitHub）
+- 你的数据：数据根（默认 `~/Documents/Anote/`，`ANOTE_DATA` 可覆盖）
+  - 笔记/文献/书/项目/队列在数据根下
+  - **配置、日志、外部 MCP 注册、默认备份**都在数据根的 `.anote/` 内
+- 换电脑：整目录拷贝数据根 + 项目 → `./setup.sh` → `anote check` 全绿
+- 修改数据根位置：`anote migrate --to <新路径>`（配置随迁；旧 `~/.config/anote/config` 仅作一次性兼容）

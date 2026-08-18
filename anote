@@ -2,28 +2,40 @@
 # ============================================================
 #  anote — Anote 科研知识库统一入口
 #  用法: anote <命令> [参数]
-#  安装: ln -sf "$PWD/anote" ~/.local/bin/anote  （PATH 含 ~/.local/bin）
-#  数据目录可在 ~/.config/anote/config 中更改（anote config set data_dir 路径）
+#  项目路径由本脚本位置自动推导（软链安装也有效）。
+#  数据根: ANOTE_DATA（优先）> 旧版 ~/.config/anote/config 指针 > ~/Documents/Anote
 # ============================================================
 set -e
-PROJ=~/Projects/Anote
-SKILL=$PROJ/scripts
 
-# 数据目录：优先 ANOTE_DATA 环境变量（测试/临时），再读配置
+# 解析项目根（跟随符号链接，支持 ~/.local/bin/anote 软链）
+_SRC="${BASH_SOURCE[0]}"
+while [ -L "$_SRC" ]; do
+  _DIR=$(cd -P "$(dirname "$_SRC")" && pwd)
+  _TARGET=$(readlink "$_SRC")
+  case "$_TARGET" in
+    /*) _SRC="$_TARGET" ;;
+    *)  _SRC="$_DIR/$_TARGET" ;;
+  esac
+done
+PROJ=$(cd -P "$(dirname "$_SRC")" && pwd)
+SKILL="$PROJ/scripts"
+VER=$(cat "$PROJ/VERSION" 2>/dev/null || echo dev)
+
+# 数据根：ANOTE_DATA 环境变量优先，其次兼容旧配置文件指针
 if [ -n "$ANOTE_DATA" ]; then
   DATA=$ANOTE_DATA
 elif [ -f "$HOME/.config/anote/config" ]; then
-  DATA=$(grep -E '^data_dir=' "$HOME/.config/anote/config" | head -1 | cut -d= -f2- | sed 's|^~|'"$HOME"'|')
+  DATA=$(grep -E '^data_dir=' "$HOME/.config/anote/config" 2>/dev/null | head -1 | cut -d= -f2- | sed 's|^~|'"$HOME"'|')
 fi
-DATA=${DATA:-~/Documents/Anote}
+DATA=${DATA:-$HOME/Documents/Anote}
 PYV="$DATA/.venv/bin/python"
 [ -x "$PYV" ] || PYV=python3   # venv 缺失时回退（语义检索等需 venv 的命令会提示）
-EDITOR_CFG=$(grep -E '^editor=' "$HOME/.config/anote/config" 2>/dev/null | cut -d= -f2-)
+EDITOR_CFG=$(grep -E '^editor=' "$DATA/.anote/config" 2>/dev/null | cut -d= -f2- || true)
+[ -n "$EDITOR_CFG" ] || EDITOR_CFG=$(grep -E '^editor=' "$HOME/.config/anote/config" 2>/dev/null | cut -d= -f2- || true)
 
 example_of() {
-  # 命令 → 常见用法示例（anote help <命令> 用）
   case "$1" in
-    ask) echo ' 例: anote ask "环是什么"（grep）| anote ask --semantic "..."（混合）| anote ask --semantic --layer docs "..."' ;;
+    ask) echo ' 例: anote ask "环是什么"（grep）| anote ask --semantic "..."（混合检索）| anote ask --semantic --layer docs "..."' ;;
     new) echo ' 例: anote new 数学/代数 "群论基础"' ;;
     read) echo ' 例: anote read pdfs/2402.00001.pdf' ;;
     docs) echo ' 例: anote docs list --status 在读 | anote docs stats' ;;
@@ -36,46 +48,46 @@ example_of() {
 }
 
 usage() {
-  cat <<'EOF'
-anote — Anote 科研知识库统一入口（v0.8.0-dev）
+  cat <<EOF
+anote — Anote 科研知识库统一入口（v$VER）
 
 使用:
-  anote tui                     打开 TUI 界面（推荐入口）
-  anote edit <路径>             用配置的编辑器打开笔记（如 anote edit 数学/代数/xxx.tex）
+  anote tui                     打开 TUI 界面
+  anote edit <路径>             用配置的编辑器打开笔记
   anote new <学科/分支> <标题>  新建笔记 [--template note|note-math]
   anote daily                   今日笔记（含队列快照）
   anote search "<关键词>"       检索文献并入队（arXiv/OpenAlex/S2/Crossref）
-  anote ask "<问题>"            知识库问答（grep）
-  anote ask --semantic "<问题>" 知识库语义问答
-  anote ask-pi "<问题>"        经 Pi 回答（可检索知识库）
-  anote backlinks "<概念>"       反链：谁引用了这个概念
-  anote meta [--ai] [--apply]  META 检查/经 Pi 补全建议
+  anote ask "<问题>"            知识库问答（grep 片段）
+  anote ask --semantic "<问题>" 混合检索（向量+BM25）
+  anote ask-pi "<问题>"         经 Pi 回答（可检索知识库）
+  anote backlinks "<概念>"      反链视图
+  anote meta [--ai]            META 检查/经 Pi 补全建议
   anote wiki [--dry] [--force] 知识编译：笔记 → 学科主题页
-  anote plugin {list\|add\|run}   插件机制
-  anote mcp                    MCP Server（外部 AI 工具接入）
-  anote test                    一键测试门禁（单测+TUI+自检）
-  anote release <maj\|min\|patch> 发布门禁（测试+版本+tag）
+  anote plugin {list|add|run}   插件机制
+  anote mcp                    MCP Server（供外部 AI 工具调用）
+  anote external {list|call}    消费外部 MCP server
+  anote test                    一键测试门禁
+  anote release <major|minor|patch> 发布门禁
   anote report                  周报自动生成
-  anote backup-create [--encrypt] 加密/校验备份（P0）
-  anote eval [--k N]             检索质量评测
-  anote paper <主题> [--type]   论文/综述/开题骨架（素材聚合+经Pi）
+  anote backup-create [--encrypt]   备份到 .anote/backups
+  anote restore <文件> [--dry-run]  备份恢复/演练
+  anote archive <年份> [--dry]  年度归档
+  anote eval [--k N]            检索质量评测
+  anote paper <主题> [--type]   论文/综述/开题骨架
   anote read <路径>             统一阅读（读即登记/进度提示）
-  anote docs {list\|add\|update\|progress\|stats\|import}  文档管理（专业图书级）
-  anote convert <文件> [--to 格式]  万能文档转换（pandoc 40+格式）
-  anote external {list\|call}   外部 MCP server 接入（消费任意 AI 工具能力）
-  anote ebook [list\|extract]   电子书管理/提取文本
-  anote index-pdf               批量提取 PDF 文本（可检索）
+  anote docs {list|add|update|progress|stats|import|annotations}
+  anote convert <文件> [--out 输出]  文档转换（pandoc）
+  anote ebook [list|extract]    电子书管理/提取文本
+  anote index-pdf               批量提取 PDF 文本
   anote checklist               投稿前检查清单
-  anote restore <文件> [--dry-run] 备份恢复/演练
-  anote archive <年份> [--dry]    年度归档
-  anote graph [--mermaid]       知识图谱（标签/反链）
-  anote web [--port N]          只读浏览外壳（仅 127.0.0.1）
-  anote export [--out 路径]     整库打包（可移植/分享）
-  anote zotero {status\|bib\|setup}  Zotero 文献接入
-  anote bibcheck                引用链路校验（cite↔refs.bib）
+  anote graph [--mermaid]       知识图谱
+  anote web [--port N]          只读浏览外壳（仅本机）
+  anote export [--out 路径]     整库打包
+  anote zotero {status|bib|setup}  Zotero 文献接入
+  anote bibcheck                引用链路校验
   anote index                   重建分层索引
-  anote index-semantic          重建语义索引
-  anote check                   一致性自检（6 项）
+  anote index-semantic          重建/增量语义索引
+  anote check                   一致性自检（8 项）
   anote stats                   统计各类文件数
   anote migrate --to <路径>     迁移数据目录（含 .git，安全回滚）
   anote review [--days 30]      生成周/月回顾草稿
@@ -85,11 +97,12 @@ anote — Anote 科研知识库统一入口（v0.8.0-dev）
   anote book-build <书名>       编译教科书 PDF
   anote commit [说明]           提交（自动索引+自检）
   anote backup                  提交并推送远程
+  anote init-data               初始化数据目录骨架
   anote config                  查看配置
-  anote config set <键> <值>    修改配置（如 data_dir / editor / lang）
+  anote config set <键> <值>    修改配置（data_dir 请用 anote migrate）
   anote help                    本帮助
 
-数据目录: $DATA   编辑器: ${EDITOR_CFG:-code}
+数据根: $DATA   编辑器: ${EDITOR_CFG:-code}
 EOF
 }
 
@@ -99,13 +112,13 @@ case "$cmd" in
   "")
     cat <<'MENU'
 ═══ Anote 常用操作 ═══
-  记笔记      anote new 学科/分支 "标题"     （或: anote 记 数学/代数 "标题"）
-  问知识库    anote ask --semantic "问题"    （或: anote 问 "问题"）
-  读文档      anote read pdfs/xxx.pdf         （或: anote 读 ...）
-  问 AI       anote ai "帮我…"                （说人话，AI 自动执行）
-  文献管理    anote docs list / stats         （或: anote 文献）
-  写论文      anote paper "主题"              （或: anote 写论文 "主题"）
-  自检/保存   anote check / commit "说明"     （或: anote 检查 / 保存）
+  记笔记      anote new 数学/代数 "标题"
+  问知识库    anote ask --semantic "问题"
+  读文档      anote read pdfs/xxx.pdf
+  问 AI       anote ai "帮我…"
+  文献管理    anote docs list / stats
+  写论文      anote paper "主题" --type 综述
+  自检/保存   anote check / commit "说明"
   打开界面    anote tui
   全部命令    anote help
 MENU
@@ -113,13 +126,15 @@ MENU
   help|-h|--help)
     if [ -n "$1" ]; then
       echo "═══ anote $1 ═══"
-      usage | grep -i "anote $1" | head -3
+      usage | grep -i "anote $1" | head -5
       ex=$(example_of "$1")
       [ -n "$ex" ] && echo "$ex"
       echo ""
     else
       usage
     fi ;;
+  init-data)
+    python3 "$SKILL/init_data.py" ;;
   tui) cd "$PROJ" && "$PYV" -m tui ;;
   edit)
     [ -z "$1" ] && { echo "用法: anote edit <相对数据目录的路径>"; exit 1; }
@@ -132,87 +147,86 @@ MENU
       "$PYV" "$SKILL/anote_config.py"
     fi ;;
   new)
-    # anote new <学科/分支> <标题> [--template 名]
-    dir="$1"; title="$2"; tpl="note"; shift 2 2>/dev/null || true
-    if [ "$1" = "--template" ] && [ -n "$2" ]; then tpl="$2"; fi
-    [ -z "$dir" ] || [ -z "$title" ] && { echo "用法: anote new <学科/分支> <标题> [--template 名]"; exit 1; }
-    TF="$PROJ/templates/$tpl.tex"
-    [ -f "$TF" ] || TF="$PROJ/templates/note.tex"
-    path="$DATA/src/$dir"; mkdir -p "$path"
-    f="$path/$(date +%F)_$(echo "$title" | tr ' ' '_').tex"
-    sed -e "s|%%DISC%%|${dir%/*}|g" -e "s|%%BRANCH%%|${dir##*/}|g" \
-        -e "s|%%TITLE%%|$title|g" -e "s|%%DATE%%|$(date +%F)|g" "$TF" > "$f"
-    echo "✓ 已创建: $f（模板: $tpl）"
-    echo "  💡 下一步: 写完 anote commit \"说明\"（自动索引+自检）"
-    "${EDITOR_CFG:-code}" "$f" 2>/dev/null || true ;;
+    "$PYV" "$SKILL/new.py" "$@" ;;
   search)
     [ -z "$1" ] && { echo "用法: anote search \"<关键词>\" [--max 10]"; exit 1; }
     "$PYV" "$SKILL/search.py" --provider arxiv --query "$1" --queue "$DATA/queue.md" "${@:2}" ;;
   ask)
     "$PYV" "$SKILL/ask.py" "$@" ;;
   ask-pi)
-    # anote ask-pi "<问题>" —— 经 Pi（agent）回答问题
     [ -z "$1" ] && { echo "用法: anote ask-pi \"<问题>\""; exit 1; }
     pi -p "$*" ;;
   ask-ai)
     "$PYV" "$SKILL/ask.py" "$@" ;;
   zotero)
-    # anote zotero {status|bib|setup}
     python3 "$SKILL/zotero.py" "$@" ;;
   bibcheck)
     python3 "$SKILL/bibcheck.py" ;;
   web)
-    # anote web [--port N] [--token xxx] —— 只读浏览外壳
     "$PYV" "$SKILL/web_server.py" "$@" ;;
   export)
     python3 "$SKILL/export.py" "$@" ;;
   external)
-    # anote external {list|call <名> <工具> [--args JSON]} —— 外部 MCP server 接入
     "$PYV" "$SKILL/external.py" "$@" ;;
   convert)
-    # anote convert <文件> [--out 输出] [--to 格式] —— 万能文档转换(pandoc)
     python3 "$SKILL/convert.py" "$@" ;;
   ai)
-    # anote ai "<自然语言>" —— 经 Pi 转成命令并执行（说人话即可）
+    # anote ai "<自然语言>" —— 经 Pi 转成一条命令并执行（只允许已知命令，不 eval）
     [ -z "$1" ] && { echo "用法: anote ai \"<你想做什么>\""; exit 1; }
-    PROMPT="你是 Anote 命令助手（数据目录 ~/Documents/Anote，命令见 anote help）。用户想: $*。只输出一条要执行的 anote 命令（不要引号包裹、不要解释、不要多余文字）。若用户只是提问，输出: anote ask-pi \"$*\""
+    PROMPT="你是 Anote 命令助手（数据根 $DATA，命令见 anote help）。用户想: $*。只输出一条要执行的 anote 命令（不要引号包裹、不要解释、不要多余文字）。若用户只是提问，输出: anote ask-pi \"$*\""
     CMD=$(pi -p "$PROMPT" 2>/dev/null | tr -d '`' | head -1)
+    [ -n "$CMD" ] || { echo "✗ Pi 未返回命令"; exit 1; }
     echo "→ 将执行: $CMD"
-    eval "$CMD" ;;
-  paper-read)
+    case "$CMD" in
+      anote\ *)
+        sub=${CMD#anote }; subcmd=${sub%% *}
+        case "$subcmd" in
+          ask|ask-pi|new|read|docs|paper|search|check|stats|review|commit|backup|backup-create|index|index-semantic|wiki|meta|graph|report|convert|ebook|tui|help|book|chapter|project|daily|archive|restore|bibcheck|zotero|web|eval|plugin|external)
+            "$PYV" - "$0" "$sub" <<'PYEOF'
+import shlex
+import subprocess
+import sys
+
+bin_path, rest = sys.argv[1], sys.argv[2]
+try:
+    args = shlex.split(rest)
+except ValueError as e:
+    print(f"✗ AI 返回的命令参数解析失败: {e}", file=sys.stderr)
+    sys.exit(1)
+sys.exit(subprocess.run([bin_path, *args]).returncode)
+PYEOF
+            ;;
+          *) echo "✗ AI 返回了不允许的命令: $subcmd"; exit 1 ;;
+        esac ;;
+      *) echo "✗ AI 返回内容不是 anote 命令"; exit 1 ;;
+    esac ;;
+  paper-read|读论文)
     # anote 读论文 <arxiv-id> —— 下载+提取+精读笔记+登记 一条龙
-    [ -z "$1" ] && { echo "用法: anote 读论文 <arxiv-id>（如 anote 读论文 2402.00001）"; exit 1; }
-    "$PYV" "$SKILL/fetch_paper.py" --arxivid "$1" --tex-note
+    [ -z "$1" ] && { echo "用法: anote paper-read <arxiv-id>（或 anote 读论文之前版本的别名）"; exit 1; }
+    "$PYV" "$SKILL/fetch_paper.py" --arxivid "$1" --tex-note "$DATA/src/papers" --dir "$DATA/pdfs"
     python3 "$SKILL/docs.py" import ;;
   md)
-    # anote md <文件> [--watch] —— 终端实时 Markdown 渲染
     python3 "$SKILL/mdview.py" "$@" ;;
   preview)
-    # anote preview <文件> [--watch] —— MD/TEX 浏览器预览
     python3 "$SKILL/preview.py" "$@" ;;
   lint)
     python3 "$SKILL/lint.py" "$@" ;;
   docs-annotations)
-    # anote docs annotations <标注文件> [--to 笔记] —— Zotero 标注导入
     python3 "$SKILL/annotations.py" "$@" ;;
   docs)
-    # anote docs {list|add|update|progress|stats|import|annotations}
     if [ "$1" == "annotations" ]; then shift; python3 "$SKILL/annotations.py" "$@"
     else python3 "$SKILL/docs.py" "$@"; fi ;;
   read)
-    # anote read <路径> —— 统一阅读入口
     python3 "$SKILL/read.py" "$@" ;;
   ebook)
     python3 "$SKILL/ebook.py" "$@" ;;
   index-pdf)
     python3 "$SKILL/index_pdf.py" ;;
   paper)
-    # anote paper <主题> [--type 论文|综述|开题] [--no-ai] [--dry]
     "$PYV" "$SKILL/paper.py" "$@" ;;
   checklist)
     python3 "$SKILL/checklist.py" ;;
   eval)
-    # anote eval [--k N] —— 检索质量评测
     "$PYV" "$SKILL/eval_retrieval.py" "$@" ;;
   backup-create)
     python3 "$SKILL/backup.py" "$@" ;;
@@ -225,16 +239,12 @@ MENU
   graph)
     python3 "$SKILL/graph.py" "$@" ;;
   release)
-    # anote release <major|minor|patch> —— 发布门禁
     bash "$PROJ/scripts/release.sh" "$@" ;;
   test)
-    # anote test —— 一键测试门禁
     bash "$PROJ/scripts/run-tests.sh" ;;
   mcp)
-    # anote mcp —— MCP Server（stdio，供外部 AI 工具调用）
     "$PYV" "$SKILL/mcp_server.py" ;;
   plugin)
-    # anote plugin {list|add|run}
     sub="$1"; shift 2>/dev/null || true
     PLUG="$PROJ/plugins"
     case "$sub" in
@@ -251,25 +261,21 @@ MENU
       *) echo "用法: anote plugin {list|add|run}"; exit 1 ;;
     esac ;;
   wiki)
-    # anote wiki [--dry] [--branch 学科/分支] [--force] —— 知识编译层
     python3 "$SKILL/wiki.py" "$@" ;;
   meta)
-    # anote meta [--ai] [--apply] —— META 元数据检查/补全
     python3 "$SKILL/meta.py" "$@" ;;
   backlinks)
-    # anote backlinks "<概念>" —— 反链视图
     [ -z "$1" ] && { echo "用法: anote backlinks \"<概念>\""; exit 1; }
     python3 "$SKILL/backlinks.py" "$1" ;;
   index)
     python3 "$SKILL/index-gen.py" ;;
   index-semantic)
-    HF_ENDPOINT=https://hf-mirror.com "$PYV" "$SKILL/embed.py" "$@" ;;
+    HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com} "$PYV" "$SKILL/embed.py" "$@" ;;
   check)
     python3 "$SKILL/check.py" ;;
   stats)
     python3 "$SKILL/stats.py" "${@:1}" ;;
   migrate)
-    # anote migrate --to <新路径> [--preview] [--force] [--with-env]
     python3 "$SKILL/migrate.py" "$@" ;;
   review)
     python3 "$SKILL/review.py" "$@" ;;
@@ -280,43 +286,61 @@ MENU
   project)
     name="$1"; goal="$2"
     [ -z "$name" ] && { echo "用法: anote project <名> [目标]"; exit 1; }
+    # 模板缺失时从项目模板补齐（新数据目录首次使用也正确）
+    [ -d "$DATA/projects/_template" ] || python3 "$SKILL/init_data.py" >/dev/null
     d="$DATA/projects/$name"; mkdir -p "$d"
-    cp "$DATA/projects/_template/plan.tex" "$d/plan.tex" 2>/dev/null || true
-    cp "$DATA/projects/_template/log.tex" "$d/log.tex" 2>/dev/null || true
+    cp "$DATA/projects/_template/plan.tex" "$d/plan.tex"
+    cp "$DATA/projects/_template/log.tex" "$d/log.tex"
     echo "✓ 项目已创建: $d" ;;
   book)
     name="$1"; author="${2:-作者}"
     [ -z "$name" ] && { echo "用法: anote book <书名> [作者]"; exit 1; }
-    d="$DATA/books/$name"; mkdir -p "$d/chapters" "$d/figures"
-    cp "$DATA/books/_template/main.tex" "$d/main.tex" 2>/dev/null || true
-    cp "$DATA/books/_template/chapters/ch01.tex" "$d/chapters/ch01.tex" 2>/dev/null || true
-    cp "$DATA/books/_template/refs.bib" "$d/refs.bib" 2>/dev/null || true
-    cp "$DATA/books/_template/latexmkrc" "$d/latexmkrc" 2>/dev/null || true
+    [ -d "$DATA/books/_template" ] || python3 "$SKILL/init_data.py" >/dev/null
+    d="$DATA/books/$name"
+    if [ -d "$d" ]; then echo "✗ 书已存在: $d"; exit 1; fi
+    cp -r "$DATA/books/_template" "$d"
     sed -i "s/书名（在 manage.sh book 生成时填入）/$name/" "$d/main.tex" 2>/dev/null || true
     echo "✓ 教科书已创建: $d（anote book-build \"$name\" 编译）" ;;
   chapter)
     book="$1"; title="$2"
     [ -z "$book" ] || [ -z "$title" ] && { echo "用法: anote chapter <书名> <章名>"; exit 1; }
     d="$DATA/books/$book/chapters"
-    n=$(ls "$d" 2>/dev/null | wc -l); n=$((n+1))
+    [ -d "$d" ] || { echo "✗ 书不存在: $book"; exit 1; }
+    n=$(find "$d" -maxdepth 1 -name '*.tex' | wc -l); n=$((n+1))
     f="$d/ch$(printf %02d $n).tex"
-    printf '%%%% ===== 第 %d 章 =====\\n\\\\chapter{%s}\\n\\\\label{ch:auto%d}\\n\\n正文从这里写起。\\n' "$n" "$title" "$n" > "$f"
+    printf '%% ===== 第 %d 章 =====\n\\chapter{%s}\n\\label{ch:auto%d}\n\n正文从这里写起。\n' "$n" "$title" "$n" > "$f"
     echo "✓ 章节已创建: $f" ;;
   book-build)
     name="$1"; [ -z "$name" ] && { echo "用法: anote book-build <书名>"; exit 1; }
-    cd "$DATA/books/$name" && latexmk -lualatex -interaction=nonstopmode main.tex 2>&1 | tail -3 ;;
+    d="$DATA/books/$name"
+    [ -f "$d/main.tex" ] || { echo "✗ 书不存在或缺 main.tex: $d"; exit 1; }
+    (cd "$d" && latexmk -lualatex -interaction=nonstopmode main.tex 2>&1 | tail -3) ;;
   commit)
-    cd "$DATA" && git add -A && git commit -m "${1:-update}"
-    echo "  💡 已提交。定期 anote backup 推送远程备份" ;;
+    cd "$DATA"
+    [ -d .git ] || { echo "✗ 数据目录不是 git 仓库。先运行: cd $DATA && git init"; exit 1; }
+    python3 "$SKILL/index-gen.py" >/dev/null || true
+    python3 "$SKILL/check.py" >/dev/null || true
+    if ! git add -A; then echo "✗ git add 失败"; exit 1; fi
+    if git diff --cached --quiet; then
+      echo "✓ 无新变更，无需提交"
+    else
+      git commit -m "${1:-update}"
+      echo "  💡 已提交。定期 anote backup 推送远程备份"
+    fi ;;
   backup)
-    cd "$DATA" && git add -A && git commit -m "backup: $(date '+%Y-%m-%d %H:%M')" || echo "无新变更"
+    cd "$DATA"
+    [ -d .git ] || { echo "✗ 数据目录不是 git 仓库"; exit 1; }
+    git add -A
+    if ! git diff --cached --quiet; then
+      git commit -m "backup: $(date '+%Y-%m-%d %H:%M')"
+    fi
     if git remote -v | grep -q push; then git push && echo "✅ 已推送远程"
     else echo "⚠️ 未配置远程: git remote add origin <gitee 地址>"; fi ;;
   *)
     SUGGEST=$(python3 - "$cmd" <<'PYEOF'
 import sys, difflib
 cmd = sys.argv[1]
-known = "ask read new paper book docs check stats commit backup review convert tui index index-semantic lint ai paper-read project chapter book-build release eval meta wiki graph report migrate export web zotero bibcheck fetch_paper extract bibclean new_paper daily archive restore search plugin mcp external docs-annotations index-pdf test help setup".split()
+known = "ask read new paper book docs check stats commit backup review convert tui index index-semantic lint ai paper-read project chapter book-build release eval meta wiki graph report migrate export web zotero bibcheck fetch_paper extract bibclean new_paper daily archive restore search plugin mcp external docs-annotations index-pdf test help init-data".split()
 m = difflib.get_close_matches(cmd, known, n=1, cutoff=0.5)
 print(m[0] if m else "")
 PYEOF

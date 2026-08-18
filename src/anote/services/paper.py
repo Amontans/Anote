@@ -129,10 +129,12 @@ def generate(topic: str, type_cn: str, materials: dict, data: Path, use_ai: bool
             content = r.stdout
             note = "（经 Pi 生成，请人工校对）"
         else:
-            content = SKELETON_TMPL.format(topic=topic, type_cn=type_cn, date="2026")
+            content = SKELETON_TMPL.format(topic=topic, type_cn=type_cn,
+                                            date=__import__("datetime").date.today().isoformat())
             note = "（Pi 调用失败，已用内置模板兜底）"
     else:
-        content = SKELETON_TMPL.format(topic=topic, type_cn=type_cn, date="2026")
+        content = SKELETON_TMPL.format(topic=topic, type_cn=type_cn,
+                                        date=__import__("datetime").date.today().isoformat())
         note = "（--no-ai 内置模板）"
     tex.write_text(content, encoding="utf-8")
     return tex, note

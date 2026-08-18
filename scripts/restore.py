@@ -84,19 +84,28 @@ def main() -> int:
         print(f"（未加 --force，仅预览。加 --force 还原到 {target}）")
         return 0
     if not dry:
+        target = Path(target)
         with tarfile.open(path, "r:gz") as tf:
-            members = tf.getmembers()
-            for m in members:
+            safe = []
+            for m in tf.getmembers():
+                member_name = m.name.replace("\\", "/")
+                if member_name.startswith("/") or ".." in Path(member_name).parts:
+                    print(f"✗ 拒绝不安全的备份成员: {m.name}")
+                    return 1
+                # 只还原普通文件与目录，跳过链接/设备
+                if not (m.isfile() or m.isdir()):
+                    print(f"（跳过特殊文件: {m.name}）")
+                    continue
                 # 剥离备份顶层目录（arcname=数据目录名）
                 parts = m.name.split("/", 1)
                 if len(parts) > 1:
                     m.name = parts[1]
                 elif m.isdir():
                     m.name = "."
-            tf.extractall(target, members=members)
+                safe.append(m)
+            tf.extractall(target, members=safe)
         print(f"✓ 已还原到 {target}（请运行 anote check 验证）")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(__import__("anote.cli", fromlist=["run"]).run(main))

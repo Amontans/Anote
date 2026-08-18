@@ -3,19 +3,19 @@
 from textual.command import Hit, Provider
 
 COMMANDS = [
-    ("index", "notes index", "重建分层索引"),
-    ("index-semantic", "notes index-semantic", "重建/增量语义索引"),
-    ("check", "notes check", "运行 6 项一致性自检"),
-    ("review", "notes review --days 7", "生成周回顾草稿"),
-    ("ask", 'notes ask --semantic "问题"', "语义问答（省 token）"),
-    ("new", 'notes new 学科/分支 "标题"', "新建笔记（自动 META 模板）"),
-    ("book", 'notes book "书名"', "新建教科书（ctexbook）"),
-    ("book-build", 'notes book-build "书名"', "编译教科书 PDF"),
-    ("chapter", 'notes chapter "书名" "章名"', "添加章节"),
-    ("project", 'notes project "名" "目标"', "新建研究项目"),
-    ("commit", 'notes commit "说明"', "提交（自动索引+自检）"),
-    ("backup", "notes backup", "提交并推送远程"),
-    ("tui", "notes tui", "打开本 TUI"),
+    ("index", "anote index", "重建分层索引"),
+    ("index-semantic", "anote index-semantic", "重建/增量语义索引"),
+    ("check", "anote check", "运行 8 项一致性自检"),
+    ("review", "anote review --days 7", "生成周回顾草稿"),
+    ("ask", 'anote ask --semantic "问题"', "混合检索问答（省 token）"),
+    ("new", 'anote new 学科/分支 "标题"', "新建笔记（自动 META 模板）"),
+    ("book", 'anote book "书名"', "新建教科书（ctexbook）"),
+    ("book-build", 'anote book-build "书名"', "编译教科书 PDF"),
+    ("chapter", 'anote chapter "书名" "章名"', "添加章节"),
+    ("project", 'anote project "名" "目标"', "新建研究项目"),
+    ("commit", 'anote commit "说明"', "提交（自动索引+自检）"),
+    ("backup", "anote backup", "提交并推送远程"),
+    ("tui", "anote tui", "打开本 TUI"),
 ]
 
 BINDINGS_HELP = [

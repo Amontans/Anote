@@ -37,7 +37,7 @@ def first_author(authors, n=3):
 def arxiv_search(query, max_results, since_months=None, sort="relevance"):
     # arXiv API is Atom XML; fetch and parse minimal fields via regex-free approach
     import re
-    base = "http://export.arxiv.org/api/query"
+    base = "https://export.arxiv.org/api/query"
     q = urllib.parse.quote(query)
     sort_by = "submittedDate" if sort == "date" else "relevance"
     if since_months:
@@ -64,6 +64,26 @@ def arxiv_search(query, max_results, since_months=None, sort="relevance"):
             "abstract": g("summary").replace("\n", " ").strip(),
             "url": f"https://arxiv.org/abs/{aid}", "arxiv_id": aid,
             "doi": g("arxiv:doi") or "",
+        })
+    return out
+
+
+def s2_search(query, max_results=5):
+    """Semantic Scholar 关键词检索。"""
+    d = http_get("https://api.semanticscholar.org/graph/v1/paper/search",
+                 {"query": query, "limit": max_results,
+                  "fields": "title,authors,year,abstract,citationCount,externalIds,venue,url"})
+    out = []
+    for w in d.get("data", []):
+        out.append({
+            "source": "Semantic Scholar", "title": w.get("title", ""),
+            "authors": [a.get("name", "") for a in w.get("authors", [])],
+            "year": str(w.get("year", "")), "abstract": w.get("abstract", "") or "",
+            "citations": w.get("citationCount", 0),
+            "url": w.get("url", ""), "venue": w.get("venue", ""),
+            "doi": (w.get("externalIds") or {}).get("DOI", ""),
+            "arxiv_id": (w.get("externalIds") or {}).get("ArXiv", ""),
+            "pdf": (w.get("openAccessPdf") or {}).get("url", ""),
         })
     return out
 
@@ -96,6 +116,17 @@ def s2_citations(doi=None, arxivid=None, limit=20):
     } for c in d.get("data", [])]
 
 
+def _reconstruct_abstract(inverted) -> str:
+    """OpenAlex 倒排索引 → 文本。"""
+    if not isinstance(inverted, dict) or not inverted:
+        return ""
+    pos = {}
+    for word, idxs in inverted.items():
+        for i in idxs:
+            pos[i] = word
+    return " ".join(pos[i] for i in sorted(pos))[:600]
+
+
 def openalex_search(query, max_results, since=None, sort="relevance_score:desc"):
     p = {"search": query, "per-page": max_results, "mailto": "research@example.com",
          "sort": sort}
@@ -108,7 +139,7 @@ def openalex_search(query, max_results, since=None, sort="relevance_score:desc")
             "source": "OpenAlex", "title": w.get("title", ""),
             "authors": [a["author"]["display_name"] for a in w.get("authorships", [])],
             "year": str(w.get("publication_year", "")),
-            "abstract": (w.get("abstract_inverted_index") or {}).__class__.__name__,
+            "abstract": _reconstruct_abstract(w.get("abstract_inverted_index") or {}),
             "citations": w.get("cited_by_count", 0),
             "url": w.get("doi") or w.get("id", ""), "venue": (w.get("primary_location") or {}).get("source", {}) and ((w.get("primary_location") or {}).get("source") or {}).get("display_name", ""),
             "doi": w.get("doi", ""), "openalex_id": w.get("id", ""),
@@ -134,13 +165,23 @@ def re_sub(s):
     return re.sub(r"<[^>]+>", "", s or "").strip()
 
 
+def bib_escape(text: str) -> str:
+    """BibTeX 字段转义。"""
+    return (text.replace("\\", " ")
+                .replace("&", r"\&")
+                .replace("%", r"\%")
+                .replace("#", r"\#")
+                .replace("_", r"\_")
+                .replace("$", r"\$"))
+
+
 def to_bibtex(papers):
     entries = []
     for i, p in enumerate(papers):
         key = f"{'arXiv' if p.get('arxiv_id') else 'doi'}_{i}"
         fields = []
         if p.get("title"):
-            fields.append(("title", p["title"]))
+            fields.append(("title", bib_escape(p["title"])))
         if p.get("authors"):
             fields.append(("author", first_author(p["authors"], 12)))
         if p.get("year"):
@@ -153,8 +194,7 @@ def to_bibtex(papers):
         if p.get("doi"):
             fields.append(("doi", p["doi"]))
         if p.get("abstract"):
-            ab = p["abstract"][:400].replace("&", r"\&")
-            fields.append(("abstract", ab))
+            fields.append(("abstract", bib_escape(str(p["abstract"])[:400])))
         if p.get("url"):
             fields.append(("url", p["url"]))
         body = ",\n  ".join(f"{k} = {{{v}}}" for k, v in fields)

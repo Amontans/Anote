@@ -16,7 +16,7 @@ import anote_config as cfg  # noqa: E402
 
 from textual.message import Message  # noqa: E402
 
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from anote.core import PROJECT_ROOT  # noqa: E402
 from anote.services import NotesService, QueueService  # noqa: E402
 
 
@@ -72,6 +72,9 @@ class AnoteContext:
         self._cfg = cfg.load()
 
     def set_config(self, key, value):
+        """保存配置。data_dir 不能直接改，必须走 migrate。"""
+        if key == "data_dir":
+            raise ValueError("data_dir 不能直接修改，请使用迁移向导")
         cfg.set(key, value)
         self.reload()
 

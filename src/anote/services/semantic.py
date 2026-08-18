@@ -38,16 +38,24 @@ def chunk_text(text: str) -> list[str]:
 
 
 class SemanticService:
-    MODEL = "BAAI/bge-small-zh-v1.5"
+    DEFAULT_MODEL = "BAAI/bge-small-zh-v1.5"
 
-    def __init__(self, data_dir: Path):
+    def __init__(self, data_dir: Path, model_name: str | None = None):
         self.data = Path(data_dir)
         self.cache = self.data / ".semantic"
+        if model_name is None:
+            try:
+                from ..core import Config
+                model_name = Config.load().semantic_model
+            except Exception:  # noqa: BLE001
+                model_name = self.DEFAULT_MODEL
+        self.model_name = model_name or self.DEFAULT_MODEL
 
     def _scan(self) -> dict[str, float]:
         files = {}
         for root, dirs, fs in os.walk(self.data):
-            dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
+            dirs[:] = [d for d in dirs
+                       if d not in SKIP_DIRS and not d.startswith((".", "_"))]
             for f in fs:
                 if f in ("00-index.tex", "README.md"):
                     continue
@@ -86,7 +94,7 @@ class SemanticService:
                 changed.add(p)
         if not changed:
             return len(old), 0
-        model = TextEmbedding(model_name=self.MODEL)
+        model = TextEmbedding(model_name=self.model_name)
         new_c, new_v = [], []
         for p in sorted(changed):
             for ch in chunk_text(Path(p).read_text(encoding="utf-8", errors="ignore")):
@@ -109,7 +117,7 @@ class SemanticService:
         data = json.loads((self.cache / "chunks.json").read_text(encoding="utf-8"))
         chunks = data.get("chunks", []) if data.get("schema_version", 1) == 1 else []
         vecs = np.load(self.cache / "vectors.npy")
-        model = TextEmbedding(model_name=self.MODEL)
+        model = TextEmbedding(model_name=self.model_name)
         qv = np.asarray(next(model.embed([query])), dtype=np.float32)
         sims = (vecs @ qv) / ((np.linalg.norm(vecs, axis=1) + 1e-9) * (np.linalg.norm(qv) + 1e-9))
         idxs = np.argsort(-sims)[:top]

@@ -31,7 +31,7 @@ def main() -> int:
     rel = str(p.relative_to(data))
     svc.mark_read(rel)  # 读即登记：自动加/📥→📖/记录最后阅读
     e = svc.find(rel)
-    reader = pick_reader(p, Config.load().config.get("reader", ""))
+    reader = pick_reader(p, Config.load().reader)
     subprocess.Popen([reader, str(p)], start_new_session=True)
     hint = f"（上次进度 {e.progress}）" if e and e.progress != "0%" else ""
     print(f"✓ 用 {reader} 打开: {p} {hint}")

@@ -44,7 +44,8 @@ def compile_theme(disc: str, branch: str, notes, data: Path, force: bool = False
     """编译一个主题页 → 返回 (输出路径, 成功)。"""
     wiki_dir = Path(data) / "wiki"
     wiki_dir.mkdir(exist_ok=True)
-    out = wiki_dir / f"{disc}_{branch}.md"
+    safe = lambda x: "".join(c if c not in "/\\:*?\"<>|" else "_" for c in x).strip() or "_"
+    out = wiki_dir / f"{safe(disc)}_{safe(branch)}.md"
     if out.exists() and not force:
         return out, None  # 已存在，跳过
     notes_block = "\n".join(

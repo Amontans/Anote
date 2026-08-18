@@ -46,10 +46,11 @@ def rg(pattern: str, root: str) -> list[str]:
         return []
 
 
-def snippets(path: str, pattern: str, maxchars: int) -> list[str]:
+def snippets(path: str, pattern: str, maxchars: int, root: str = "") -> list[str]:
     try:
         r = subprocess.run(["rg", "-n", "-i", "-C", "2", pattern, path],
-                           capture_output=True, text=True, timeout=20)
+                           capture_output=True, text=True, timeout=20,
+                           cwd=(root or None))
         lines = r.stdout.splitlines()
     except Exception:  # noqa: BLE001
         return []
@@ -162,7 +163,7 @@ def main() -> int:
     print(f"命中 {len(hits)} 个文件，展示前 {len(ranked)} 个：\n" + "=" * 60)
     for f in ranked:
         print(f"\n## {f}  (命中 {hits[f]} 次)")
-        for ln in snippets(f, keywords[0], maxchars):
+        for ln in snippets(f, keywords[0], maxchars, root):
             print(ln)
     print("\n" + "=" * 60)
     return 0

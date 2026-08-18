@@ -49,7 +49,7 @@ def main() -> int:
     elif a.provider == "openalex":
         papers = lit.openalex_search(a.query, a.max, since=a.since, sort=a.sort)
     elif a.provider == "s2":
-        papers = lit.s2_lookup(doi=a.query) if a.query.startswith("10.") else []
+        papers = lit.s2_lookup(doi=a.query) if a.query.startswith("10.") else lit.s2_search(a.query, a.max)
     else:
         papers = lit.crossref_doi(a.query) if a.query.startswith("10.") else []
 

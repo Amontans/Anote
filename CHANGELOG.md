@@ -1,5 +1,41 @@
 # 变更日志（CHANGELOG）
 
+## [1.15.0] - 2026-08-19（可移植性校正：项目可安全开源上传）
+
+### 数据自足（所有用户数据进入数据根）
+- 数据根统一解析：`ANOTE_DATA` > 旧 `~/.config/anote/config` 指针（一次性迁移后删除）> `~/Documents/Anote`
+- 配置迁移至 `<数据根>/.anote/config`；日志 → `.anote/logs/`；外部 MCP 注册 → `.anote/external.json`；迁移日志 → `.anote/migration.log`
+- 默认备份输出 → `.anote/backups/`；默认导出 → `.anote/exports/`；MD 预览缓存 → `.anote/previews/`
+- `Config.set("data_dir")` 禁用，数据根变更必须走 `anote migrate --to`；新增 `reader`/`pi_bin` 配置键，`semantic_model` 真正生效
+- `setup.sh` 新增数据骨架初始化（src/memory/books/projects/queue/refs.bib/.gitignore/README/配置），自动 `git init` 并安装 pre-commit/pre-push
+- 项目根新增 `.gitignore`，移除全部 `__pycache__/*.pyc` 与根目录示例 PDF/论文/refs.bib 的版本跟踪
+
+### 路径可移植
+- `anote`/`setup.sh`/`run-tests.sh`/`release.sh`/`daily-backup.sh`/`weekly-review.sh` 全部从自身位置推导项目根，不再硬编码 `~/Projects/Anote`
+- systemd 单元改为 `@@PROJECT@@` 占位模板，安装时替换实际项目路径
+- 数据仓库 git hooks 只依赖 PATH 中的 `anote`，不再写死项目路径
+
+### 功能修复
+- `anote read`：修复 `Config` 无 `.config` 属性的崩溃，阅读器配置生效
+- `anote ask`：关键词命中片段现在在任何工作目录下都能正确显示
+- `anote paper-read/读论文`：PDF 默认写入数据根 `pdfs/`，元数据自动获取，精读笔记模板路径修复且自动含 META 块
+- `anote new`：Python 生成模板（修复 sed `&` 注入），文件名净化，同日同名笔记拒绝覆盖
+- `anote check`：实际 8 项；新增缺 `00-index.tex` 检测；`--strict` 供门禁；PDF 在 queue 或 registry 之一登记即不再误报
+- 语义索引：自动跳过 `_`/`.` 开头目录（归档真正排除）；`semantic_model` 配置生效
+- MCP Server：`show_banner=False`，离线/代理环境不再因版本检查崩溃
+- Web 只读外壳：禁止访问 `.git/.venv/.semantic/.anote`
+- `restore`：拒绝路径穿越与特殊文件成员
+- `anote ai`：改为已知命令白名单分发，不再 `eval` 任意输出
+- `anote commit/backup`：git 失败不再假成功；`book/project/chapter/book-build` 修复空模板目录假成功与多书选择问题
+
+### 检索与文献
+- Semantic Scholar 支持关键词检索；OpenAlex 摘要由倒排索引还原；arXiv 改 HTTPS；BibTeX 输出做转义
+
+### 测试与文档
+- 单测 20 项；TUI 冒烟/动作测试自包含（不依赖真实数据目录）；MCP 测试按 fastmcp 可用性自动跳过
+- `anote test` 门禁第 ④ 步改用 `check --strict`
+- README/USER-GUIDE/HANDOFF/INTERFACES/ARCHITECTURE/CODING/ROADMAP 同步新数据布局
+
 ## [1.14.3] - 2026-08-13（终端实时预览：轻量简洁）
 
 ### 变更（按用户反馈：浏览器版太重/需确认/页面杂乱/刷新不跟手）

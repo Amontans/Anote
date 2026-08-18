@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Anote 数据仓库 pre-push：测试门禁（失败则中止推送）。
+if command -v anote >/dev/null 2>&1; then
+  anote test || { echo "✗ 测试未过，推送已中止"; exit 1; }
+fi
