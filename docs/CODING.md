@@ -32,7 +32,7 @@
 ## 文件职责约定
 
 - `scripts/`：CLI 适配器（薄，≈50-150 行）；新命令先问"逻辑放 services 还是脚本"
-- `src/anote/services/`：领域服务包（一领域一模块）：queue/notes/stats/bib/health/wiki/graph/meta/review/semantic
+- `src/anote/services/`：领域服务包（一领域一模块）：queue/notes/stats/bib/health/backup/restore/bootstrap/migration/docs/ebooks/papers/preview/mdview/webserver/wiki/graph/meta/review/semantic/retrieval
 - 新增领域 → `services/<领域>.py` + `__init__.py` 一行导出；脚本只留 参数解析+输出
 - `src/anote/core.py`：横切关注点（配置/结果/日志/路径安全）
 - `tui/screens/`：一屏一文件；数据访问仅经 `self.app.context`

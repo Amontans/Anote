@@ -6,7 +6,7 @@
 > 规划：`docs/ROADMAP.md`；历史决策在 `docs/archive/`
 
 > **本文件是所有会话的"大脑"**：新开会话维护本项目，先读本文件 + `docs/INTERFACES.md` + `docs/ROADMAP.md`。
-> 最后更新：2026-08-19（v1.16.0：数据根可在设置中修改并自动迁移；BM25 倒排索引持久化；命令注册表）
+> 最后更新：2026-08-19（v1.17.0：backup/restore/preview/mdview/web 业务逻辑下沉 services 并补回归测试；完成可移植性实测）
 
 ---
 

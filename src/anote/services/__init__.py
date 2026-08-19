@@ -9,11 +9,13 @@ from .notes import Note, NotesService
 from .stats import StatsService
 from .bib import BibService
 from .health import HealthService
-from . import (queue, notes, stats, bib, health, bootstrap, docs, ebooks,
-               graph, index, meta, migration, papers, review, wiki, zotero)
+from . import (queue, notes, stats, bib, health, backup, bootstrap, docs,
+               ebooks, graph, index, mdview, meta, migration, papers, preview,
+               restore, review, webserver, wiki, zotero)
 
 __all__ = ["QueueEntry", "QueueService", "Note", "NotesService",
            "StatsService", "BibService", "HealthService",
-           "queue", "notes", "stats", "bib", "health", "bootstrap", "docs",
-           "ebooks", "graph", "index", "meta", "migration", "papers",
-           "review", "wiki", "zotero"]
+           "queue", "notes", "stats", "bib", "health", "backup", "bootstrap",
+           "docs", "ebooks", "graph", "index", "mdview", "meta",
+           "migration", "papers", "preview", "restore", "review",
+           "webserver", "wiki", "zotero"]

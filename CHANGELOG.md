@@ -1,5 +1,18 @@
 # 变更日志（CHANGELOG）
 
+## [1.17.0] - 2026-08-19（P2 服务层收尾 + 可移植性实测）
+
+### 服务层收尾
+- `backup/restore/preview/mdview/web_server` 的业务逻辑全部下沉 `src/anote/services/`，脚本恢复为薄适配器
+- 新增回归测试：备份排除运行产物/包含配置、备份-还原回环、路径穿越拒绝、终端 Markdown 渲染、Web 禁止访问 `.git`
+- 测试总数 30 项（含 MCP/命令注册表/指针迁移/服务层）
+
+### 可移植性实测通过
+- 项目复制到**含空格路径** `My Projects/Anote Copy`，数据根使用**中文+空格路径**：setup.sh --minimal、anote 软链、new/ask/check/backup-create 全部正常
+- 在复制项目内用真实 venv 跑全部 30 项单测 + TUI 双测试：全部通过（无 `~/Projects/Anote` 依赖）
+- `ANOTE_DATA` 与定位指针两种数据根发现方式均在任意路径验证通过
+- 数据根迁移到含空格目录后，后续命令自动使用新根
+
 ## [1.16.0] - 2026-08-19（数据根可在设置中修改并自动迁移；检索与工程化 P2）
 
 ### 数据根设置闭环
