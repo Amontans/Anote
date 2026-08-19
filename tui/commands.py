@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
-"""命令元数据（单一表）：帮助页 + 命令面板共用，避免双份维护。"""
-from textual.command import Hit, Provider
+"""命令元数据（单一表）：消费 src/anote/commands.py 注册表。
 
-COMMANDS = [
-    ("index", "anote index", "重建分层索引"),
-    ("index-semantic", "anote index-semantic", "重建/增量语义索引"),
-    ("check", "anote check", "运行 8 项一致性自检"),
-    ("review", "anote review --days 7", "生成周回顾草稿"),
-    ("ask", 'anote ask --semantic "问题"', "混合检索问答（省 token）"),
-    ("new", 'anote new 学科/分支 "标题"', "新建笔记（自动 META 模板）"),
-    ("book", 'anote book "书名"', "新建教科书（ctexbook）"),
-    ("book-build", 'anote book-build "书名"', "编译教科书 PDF"),
-    ("chapter", 'anote chapter "书名" "章名"', "添加章节"),
-    ("project", 'anote project "名" "目标"', "新建研究项目"),
-    ("commit", 'anote commit "说明"', "提交（自动索引+自检）"),
-    ("backup", "anote backup", "提交并推送远程"),
-    ("tui", "anote tui", "打开本 TUI"),
-]
+帮助页 + 命令面板共用，避免双份维护。
+"""
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
+
+from textual.command import Hit, Provider  # noqa: E402
+
+from anote.commands import COMMAND_META  # noqa: E402
+
+# 面板中只暴露高频命令，完整清单见 anote help
+PANEL_KEYS = ("index", "index-semantic", "check", "review", "ask", "new",
+              "book", "book-build", "chapter", "project", "commit", "backup", "tui")
+
+
+def panel_commands():
+    return [m for m in COMMAND_META if m.name in PANEL_KEYS]
+
 
 BINDINGS_HELP = [
     ("F1", "帮助"),
@@ -31,14 +34,14 @@ BINDINGS_HELP = [
 
 
 class AnoteCommands(Provider):
-    """命令面板：模糊搜索全部 Anote 命令。"""
+    """命令面板：模糊搜索 Anote 高频命令。"""
 
     async def discover(self):
-        for key, cmd, desc in COMMANDS:
-            yield Hit(display=key, command=cmd, help=desc)
+        for meta in panel_commands():
+            yield Hit(display=meta.name, command=meta.syntax, help=meta.help)
 
     async def search(self, query):
         q = query.lower()
-        for key, cmd, desc in COMMANDS:
-            if q in key.lower() or q in desc.lower():
-                yield Hit(display=key, command=cmd, help=desc)
+        for meta in panel_commands():
+            if q in meta.name.lower() or q in meta.help.lower():
+                yield Hit(display=meta.name, command=meta.syntax, help=meta.help)

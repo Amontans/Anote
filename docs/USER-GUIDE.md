@@ -103,4 +103,4 @@ anote check（自检）→ anote review（回顾草稿，AI 提炼你确认）
   - 笔记/文献/书/项目/队列在数据根下
   - **配置、日志、外部 MCP 注册、默认备份**都在数据根的 `.anote/` 内
 - 换电脑：整目录拷贝数据根 + 项目 → `./setup.sh` → `anote check` 全绿
-- 修改数据根位置：`anote migrate --to <新路径>`（配置随迁；旧 `~/.config/anote/config` 仅作一次性兼容）
+- 修改数据根位置：`anote migrate --to <新路径>`，或 TUI 设置页直接修改“数据目录”后保存（自动迁移）；`~/.config/anote/config` 只保留 `data_dir=` 定位指针

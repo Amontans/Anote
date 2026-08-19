@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""帮助页：快捷键 + 命令手册（数据来自 tui/commands.py 单一表）+ 学习路径。"""
+"""帮助页：快捷键 + 命令手册（数据来自命令注册表）+ 学习路径。"""
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Markdown
 
-from tui.commands import BINDINGS_HELP, COMMANDS
+from anote.commands import COMMAND_META
+from tui.commands import BINDINGS_HELP
 
 
 class HelpScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         binds = "\n".join(f"- `{k}` {d}" for k, d in BINDINGS_HELP)
-        rows = "\n".join(f"| `{cmd}` | {desc} |" for _, cmd, desc in COMMANDS)
+        rows = "\n".join(f"| `{m.syntax}` | {m.help} |" for m in COMMAND_META)
         yield Markdown(f"""# Anote 帮助
 
 ## 快捷键

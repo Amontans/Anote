@@ -50,6 +50,14 @@ class SemanticService:
             except Exception:  # noqa: BLE001
                 model_name = self.DEFAULT_MODEL
         self.model_name = model_name or self.DEFAULT_MODEL
+        self._model = None
+
+    def _get_model(self):
+        """懒加载并缓存嵌入模型，避免重复初始化。"""
+        if self._model is None:
+            from fastembed import TextEmbedding
+            self._model = TextEmbedding(model_name=self.model_name)
+        return self._model
 
     def _scan(self) -> dict[str, float]:
         files = {}
@@ -70,7 +78,6 @@ class SemanticService:
 
     def build(self, full: bool = False) -> tuple[int, int]:
         """增量/全量建索引 → (总块数, 新嵌入块数)。"""
-        from fastembed import TextEmbedding
         self.cache.mkdir(exist_ok=True)
         meta_p, vec_p = self.cache / "chunks.json", self.cache / "vectors.npy"
         old, vecs = [], np.zeros((0, 512), dtype=np.float32)
@@ -94,7 +101,7 @@ class SemanticService:
                 changed.add(p)
         if not changed:
             return len(old), 0
-        model = TextEmbedding(model_name=self.model_name)
+        model = self._get_model()
         new_c, new_v = [], []
         for p in sorted(changed):
             for ch in chunk_text(Path(p).read_text(encoding="utf-8", errors="ignore")):
@@ -113,11 +120,10 @@ class SemanticService:
         """语义检索 top-k → [(chunk, score)]；未建索引返回 []。"""
         if not self.has_index():
             return []
-        from fastembed import TextEmbedding
         data = json.loads((self.cache / "chunks.json").read_text(encoding="utf-8"))
         chunks = data.get("chunks", []) if data.get("schema_version", 1) == 1 else []
         vecs = np.load(self.cache / "vectors.npy")
-        model = TextEmbedding(model_name=self.model_name)
+        model = self._get_model()
         qv = np.asarray(next(model.embed([query])), dtype=np.float32)
         sims = (vecs @ qv) / ((np.linalg.norm(vecs, axis=1) + 1e-9) * (np.linalg.norm(qv) + 1e-9))
         idxs = np.argsort(-sims)[:top]

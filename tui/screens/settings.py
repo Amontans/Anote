@@ -21,7 +21,7 @@ class SettingsScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield Static("# 设置", classes="title")
-        yield Label("数据目录（修改路径后，P3 向导将自动迁移数据，含 .git 历史）")
+        yield Label("数据目录（保存时自动迁移：含 .git 历史与 .anote 配置）")
         yield Input(placeholder="~/Documents/Anote", id="data_dir")
         yield Label("编辑器（打开笔记/教科书用）")
         yield Select([(e, e) for e in EDITOR_CHOICES], id="editor")
@@ -56,17 +56,25 @@ class SettingsScreen(Screen):
             return
         self.app.run_worker(self._migrate_async(target.strip()))
 
-    async def _migrate_async(self, target: str) -> None:
+    async def _migrate_async(self, target: str, show_modal: bool = True) -> None:
         self.notify(f"迁移中：{target} …（含 .git 历史，请稍候）")
         r = await self.app.context.run_script_async("migrate.py", "--to", target, "--force", "--with-env")
-        self.app.push_screen(OutputModal("迁移结果", (r.stdout or "") + (r.stderr or "")))
+        if r.ok:
+            self.app.context.reload()
+            try:
+                self.query_one("#data_dir", Input).value = self.app.context.data_dir
+            except Exception:  # noqa: BLE001
+                pass
+            self.notify(f"✓ 数据根已切换: {self.app.context.data_dir}")
+        else:
+            self.notify(f"✗ 迁移失败: {r.tail}", severity="error")
+        if show_modal:
+            self.app.push_screen(OutputModal("迁移结果", (r.stdout or "") + (r.stderr or "")))
         self.app.post_message(ConfigChanged())
 
     def action_save(self) -> None:
         ctx = self.app.context
         dd = self.query_one("#data_dir", Input).value.strip()
-        if dd and Path(os.path.expanduser(dd)) != Path(ctx.data_dir):
-            self.notify("数据目录变更请点“迁移数据位置…”按钮（不会直接修改）", severity="warning")
         ed = self.query_one("#editor", Select).value
         if ed:
             ctx.set_config("editor", str(ed))
@@ -80,5 +88,10 @@ class SettingsScreen(Screen):
                 self.app.theme = str(th)
         except Exception:  # noqa: BLE001
             pass
+
+        if dd and Path(os.path.expanduser(dd)) != Path(ctx.data_dir):
+            # 保存其他配置后自动迁移数据根；成功后指针与配置都会指向新目录
+            self.app.run_worker(self._migrate_async(os.path.expanduser(dd), show_modal=False))
+            return
         self.app.post_message(ConfigChanged())
         self.notify("设置已保存")

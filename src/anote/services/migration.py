@@ -8,8 +8,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from ..core import (PROJECT_ROOT, LEGACY_CONFIG_PATH, Config,
-                    migration_log_path_for)
+from ..core import (PROJECT_ROOT, Config, migration_log_path_for,
+                    update_data_dir_pointer)
 
 EXCLUDE_PARTS = {".semantic", ".venv", "__pycache__"}
 # 运行产物不迁移；配置与 external.json 会随迁
@@ -96,15 +96,12 @@ def do_copy(src, target):
 
 
 def finalize_config(target: Path) -> None:
-    """把配置写到目标数据根，并移除旧 ~/.config 指针。"""
+    """把配置写到目标数据根，并更新 ~/.config/anote/config 定位指针。"""
     cfg = Config.load()
     cfg.data_dir = target
     cfg.save()
-    try:
-        if LEGACY_CONFIG_PATH.exists():
-            LEGACY_CONFIG_PATH.unlink()
-    except OSError:
-        pass
+    # 即使运行在 ANOTE_DATA 环境下也更新指针，保证设置页迁移后能找到新数据根
+    update_data_dir_pointer(target, force=True)
 
 
 def install_hooks(target: Path) -> None:

@@ -6,7 +6,7 @@
 > 规划：`docs/ROADMAP.md`；历史决策在 `docs/archive/`
 
 > **本文件是所有会话的"大脑"**：新开会话维护本项目，先读本文件 + `docs/INTERFACES.md` + `docs/ROADMAP.md`。
-> 最后更新：2026-08-19（v1.15.0：用户数据全部收进数据根 `.anote/`，项目仓库可安全开源上传）
+> 最后更新：2026-08-19（v1.16.0：数据根可在设置中修改并自动迁移；BM25 倒排索引持久化；命令注册表）
 
 ---
 
@@ -34,7 +34,7 @@
 | `<数据根>/.anote/external.json` | 外部 MCP server 注册 |
 | `<数据根>/.anote/migration.log` | 迁移日志 |
 | `<数据根>/.anote/backups/` | 默认备份输出（可 `--out` 外置冷备） |
-| `~/.config/anote/config` | **仅旧版遗留指针**；首次读取后自动迁入数据根并删除 |
+| `~/.config/anote/config` | **数据根定位指针**（仅一行 `data_dir=`）；TUI 设置保存/迁移后自动更新 |
 
 项目路径无需固定：`anote`、`setup.sh`、shell 脚本全部从自身位置推导；
 systemd 单元安装时把 `@@PROJECT@@` 替换为实际项目路径。
@@ -111,7 +111,7 @@ anote test                                                # 一键门禁（上�
 
 ## 8. 关键决策记录（含踩坑）
 
-1. **v1.15 数据自足**：所有用户数据（配置/日志/MCP注册/迁移日志/默认备份/预览）统一放数据根 `.anote/`；旧 `~/.config/anote/config` 首次读取时自动迁移后删除。项目仓库因此不含任何用户数据，可直接上传 GitHub。
+1. **v1.16 数据自足**：所有用户数据（配置/日志/MCP注册/迁移日志/默认备份/预览）统一放数据根 `.anote/`；旧 `~/.config/anote/config` 的完整配置首次读取时迁入数据根，随后该文件只保留一行 `data_dir=` 定位指针；TUI 设置页直接修改“数据目录”保存即自动迁移。项目仓库因此不含任何用户数据，可直接上传 GitHub。
 2. **项目路径自动推导**：`anote` 跟随符号链接解析自身位置；`setup.sh`/测试脚本同理。systemd 单元用 `@@PROJECT@@` 占位，安装时 sed 替换。早期硬编码 `~/Projects/Anote`、`/home/Amontans` 的坑已清除。
 3. **配置与数据根解耦**：`data_dir` 不再直接 `config set`，只能 `anote migrate --to`。`ANOTE_DATA` 是测试隔离硬边界（不读旧配置）。
 4. **同名笔记绝不覆盖**：`anote new` 用 Python 模板替换（避免 sed `&` 注入）并做 LaTeX 转义；已存在时退出 1。
@@ -145,4 +145,4 @@ git -C ~/Documents/Anote remote add origin <gitee> && anote backup
 | `anote config set data_dir` 报错 | 正确方式：`anote migrate --to <新路径>` |
 | check 报 META 缺失 | 笔记前 5 行加 `% ==META==` 块 |
 | check [1] 报缺 00-index | `anote index` 生成分层索引 |
-| 旧 `~/.config/anote/config` 仍在 | 手动运行一次 `anote config`，会自动迁移并删除（删除失败时保留） |
+| 旧 `~/.config/anote/config` 仍有完整配置 | 运行一次 `anote config`，会自动把完整配置迁入数据根，旧文件只保留 data_dir 指针 |

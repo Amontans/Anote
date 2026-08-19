@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "anote"
-version = "1.15.0"
+version = "1.16.0"
 description = "个人科研知识库操作系统：纯 TEX/MD 资产 + git 版本化 + AI 编排"
 readme = "README.md"
 requires-python = ">=3.10"

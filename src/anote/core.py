@@ -1,9 +1,11 @@
 """Anote 业务逻辑核心：模块化/类型化/配置单点/结果模式。
 
-可移植性约定（v1.15）：
-- 唯一用户数据根 = `ANOTE_DATA` 环境变量（优先）或默认 `~/Documents/Anote`；
+可移植性约定（v1.15+）：
+- 唯一用户数据根由 `ANOTE_DATA`（最高优先）、`~/.config/anote/config` 中的
+  `data_dir` 定位指针、默认 `~/Documents/Anote` 依次解析；
 - 配置、日志、外部 MCP 注册、迁移日志、默认备份/导出，全部位于数据根下的 `.anote/`；
-- 除数据根外不写任何用户数据，因此项目仓库可直接上传 GitHub。
+- `~/.config/anote/config` 只保留一行 `data_dir=` 指针用于发现非默认数据根，
+  不承载其他用户数据；项目仓库可直接上传 GitHub。
 """
 from __future__ import annotations
 
@@ -24,11 +26,11 @@ APP_DIR = ".anote"
 
 
 # ---------------------------------------------------------------------------
-# 路径解析（数据根是唯一真相源；配置不再散落在 ~/.config）
+# 路径解析（数据根是唯一真相源；~/.config 仅保留一行定位指针）
 # ---------------------------------------------------------------------------
 
 def _legacy_data_dir() -> Path | None:
-    """读取旧版 ~/.config/anote/config 中的 data_dir（仅用于一次迁移）。"""
+    """读取数据根定位指针：~/.config/anote/config 中的 data_dir。"""
     if not LEGACY_CONFIG_PATH.exists():
         return None
     try:
@@ -44,7 +46,7 @@ def _legacy_data_dir() -> Path | None:
 
 
 def resolve_data_dir(use_legacy: bool = True) -> Path:
-    """解析数据根：ANOTE_DATA > 旧配置指针 > 默认目录。"""
+    """解析数据根：ANOTE_DATA > 定位指针 > 默认目录。"""
     env = os.environ.get("ANOTE_DATA")
     if env:
         return Path(env).expanduser()
@@ -83,8 +85,22 @@ def export_dir_for(data_dir: Path) -> Path:
     return app_dir_for(data_dir) / "exports"
 
 
+def update_data_dir_pointer(data_dir: Path, force: bool = False) -> None:
+    """写/更新数据根定位指针（~/.config/anote/config，仅 data_dir 一行）。
+
+    测试/临时环境（ANOTE_DATA 已设置）默认不写，避免污染真实 HOME。
+    """
+    if not force and os.environ.get("ANOTE_DATA"):
+        return
+    try:
+        LEGACY_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        LEGACY_CONFIG_PATH.write_text(f"data_dir={Path(data_dir).expanduser()}\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
 def _migrate_legacy_config(data_dir: Path) -> None:
-    """旧版 ~/.config/anote/config → <数据根>/.anote/config（幂等）。"""
+    """旧版完整配置 → <数据根>/.anote/config（幂等）；旧文件改为纯定位指针。"""
     if not LEGACY_CONFIG_PATH.exists():
         return
     target = config_path_for(data_dir)
@@ -92,9 +108,8 @@ def _migrate_legacy_config(data_dir: Path) -> None:
         if not target.exists():
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(LEGACY_CONFIG_PATH, target)
-        # 迁移成功后移除旧文件，保证用户数据只存在于数据根内。
-        # 删除失败不影响使用（只读环境等）。
-        LEGACY_CONFIG_PATH.unlink()
+        # 完整配置已进入数据根；旧文件只保留 data_dir 指针
+        update_data_dir_pointer(data_dir)
     except OSError:
         pass
 
@@ -121,7 +136,7 @@ class Config:
     def load(cls) -> "Config":
         env = os.environ.get("ANOTE_DATA")
         data_dir = Path(env).expanduser() if env else resolve_data_dir()
-        # 仅非测试/非 env 覆盖时迁移旧配置；ANOTE_DATA 是隔离测试的硬边界
+        # 仅非测试/非 env 覆盖时迁移旧完整配置；ANOTE_DATA 是隔离测试的硬边界
         if not env:
             _migrate_legacy_config(data_dir)
 
@@ -151,6 +166,8 @@ class Config:
             "\n".join(f"{f.name}={getattr(self, f.name)}"
                       for f in fields(self)) + "\n",
             encoding="utf-8")
+        # 让系统以后能发现这个数据根（非默认路径时尤其重要）
+        update_data_dir_pointer(self.data_dir)
 
     def set(self, key: str, value: str) -> bool:
         if key == "data_dir":

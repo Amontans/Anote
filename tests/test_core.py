@@ -37,6 +37,27 @@ class TestConfig(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     Config().set("data_dir", "/tmp/elsewhere")
 
+    def test_pointer_resolution_and_update(self):
+        """定位指针决定非默认数据根；保存配置后指针同步更新。"""
+        from anote.core import LEGACY_CONFIG_PATH, config_path_for
+        with tempfile.TemporaryDirectory() as t:
+            home = Path(t)
+            data = home / "data"
+            data.mkdir()
+            pointer = home / ".config" / "anote" / "config"
+            pointer.parent.mkdir(parents=True)
+            pointer.write_text(f"data_dir={data}\n", encoding="utf-8")
+            with patch("anote.core.LEGACY_CONFIG_PATH", pointer), \
+                    patch.dict(os.environ, {"ANOTE_DATA": ""}):
+                cfg = Config.load()
+                self.assertEqual(cfg.data_dir, data)
+                cfg.set("editor", "emacs")
+                # 完整配置在数据根，指针文件只剩 data_dir
+                self.assertEqual(config_path_for(data).read_text(encoding="utf-8").splitlines()[0],
+                                 f"data_dir={data}")
+                self.assertEqual(pointer.read_text(encoding="utf-8").strip(),
+                                 f"data_dir={data}")
+
     def test_result(self):
         r = Result.success("ok")
         self.assertTrue(r.ok)
@@ -196,6 +217,20 @@ class TestRetrieval(unittest.TestCase):
         self.assertEqual(max(range(3), key=lambda i: scores[i]), 0)
         self.assertEqual(tokenize("环论"), ["环论"])
 
+    def test_bm25_save_load(self):
+        from anote.services.retrieval import BM25Index
+        with tempfile.TemporaryDirectory() as t:
+            chunks = [{"text": "环 群 二元运算"}, {"text": "注意力机制 transformer"}]
+            idx = BM25Index(chunks)
+            cache = Path(t) / "bm25.json"
+            sig = "abc"
+            idx.save(cache, sig)
+            loaded = BM25Index.load(cache, sig)
+            self.assertEqual(loaded.n, 2)
+            self.assertEqual(loaded.score("环"), idx.score("环"))
+            with self.assertRaises(ValueError):
+                BM25Index.load(cache, "wrong")
+
     def test_tokenize(self):
         from anote.services.retrieval import tokenize
         self.assertIn("attention", tokenize("Attention is all you need"))
@@ -242,6 +277,25 @@ class TestDocs(unittest.TestCase):
         st = svc.stats()
         self.assertEqual(st["total"], 1)
         self.assertEqual(st["status"]["📖"], 1)
+
+
+class TestMigrationFinalize(unittest.TestCase):
+    def test_finalize_config_updates_pointer(self):
+        from anote.core import LEGACY_CONFIG_PATH, config_path_for
+        from anote.services.migration import finalize_config
+        with tempfile.TemporaryDirectory() as t:
+            home = Path(t)
+            src = home / "src"
+            dst = home / "dst"
+            src.mkdir()
+            pointer = home / ".config" / "anote" / "config"
+            pointer.parent.mkdir(parents=True)
+            pointer.write_text(f"data_dir={src}\n", encoding="utf-8")
+            with patch("anote.core.LEGACY_CONFIG_PATH", pointer), \
+                    patch.dict(os.environ, {"ANOTE_DATA": str(src)}):
+                finalize_config(dst)
+                self.assertEqual(pointer.read_text(encoding="utf-8").strip(), f"data_dir={dst}")
+                self.assertTrue(config_path_for(dst).exists())
 
 
 class TestBootstrap(unittest.TestCase):
